@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // or "mysql" / "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  name            String
+  email           String?          @unique
+  phoneNumber     String           @unique
+  passwordHash    String
+  vehicleTypeId   Int?
+  vehicleType     VehicleType?     @relation(fields: [vehicleTypeId], references: [id])
+  licensePlate    String?
+  status          String           @default("active")
+  currentLatitude Float?
+  currentLongitude Float?
+  lastUpdatedAt   DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  locations       LocationTracking[]
+  deliveries      Delivery[]       @relation("AssignedDeliveries")
+  sentDeliveries  Delivery[]       @relation("SenderDeliveries")
+  statusLogs      DeliveryStatusLog[]
+  routeHistory    RouteHistory[]
+  notifications   Notification[]
+}
+
+model VehicleType {
+  id            Int     @id @default(autoincrement())
+  name          String  @unique
+  maxCapacityKg Float?
+  maxVolumeM3   Float?
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users         User[]
+}
+
+model LocationTracking {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  latitude  Float
+  longitude Float
+  speed     Float?
+  heading   Float?
+  accuracy  Float?
+  batteryLevel Float?
+  timestamp DateTime @default(now())
+}
+
+model Delivery {
+  id                   Int      @id @default(autoincrement())
+  trackingNumber       String   @unique
+  sender               User     @relation("SenderDeliveries", fields: [senderId], references: [id])
+  senderId             Int
+  recipientName        String
+  recipientPhone       String
+  pickupAddress        String
+  pickupLatitude       Float
+  pickupLongitude      Float
+  dropoffAddress       String
+  dropoffLatitude      Float
+  dropoffLongitude     Float
+  assignedRider        User?    @relation("AssignedDeliveries", fields: [assignedRiderId], references: [id])
+  assignedRiderId      Int?
+  deliveryStatus       String   @default("pending")
+  estimatedDeliveryTime DateTime?
+  actualDeliveryTime   DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  statusLogs           DeliveryStatusLog[]
+  proofOfDelivery      ProofOfDelivery?
+  packages             Package[]
+
+  RouteHistory RouteHistory[]
+}
+
+model DeliveryStatusLog {
+  id          Int      @id @default(autoincrement())
+  delivery    Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId  Int
+  status      String
+  updatedBy   User     @relation(fields: [updatedById], references: [id])
+  updatedById Int
+  remarks     String?
+  timestamp   DateTime @default(now())
+}
+
+model ProofOfDelivery {
+  id           Int      @id @default(autoincrement())
+  delivery     Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId   Int      @unique
+  photoUrl     String?
+  signatureData String?
+  receivedBy   String
+  receivedAt   DateTime @default(now())
+}
+
+model RouteHistory {
+  id          Int      @id @default(autoincrement())
+  rider       User     @relation(fields: [riderId], references: [id])
+  riderId     Int
+  delivery    Delivery? @relation(fields: [deliveryId], references: [id])
+  deliveryId  Int?
+  latitude    Float
+  longitude   Float
+  recordedAt  DateTime @default(now())
+}
+
+model Package {
+  id                  Int      @id @default(autoincrement())
+  delivery            Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId          Int
+  packageType         String
+  weight              Float?
+  dimensions          String?
+  specialInstructions String?
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  title     String
+  message   String
+  type      String   // e.g., "system", "alert"
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
