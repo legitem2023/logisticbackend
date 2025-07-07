@@ -3,38 +3,38 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // or "mysql" / "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
   name            String
-  email           String?          @unique
-  phoneNumber     String           @unique
+  email           String?  @unique
+  phoneNumber     String   @unique
   passwordHash    String
-  vehicleTypeId   Int?
-  vehicleType     VehicleType?     @relation(fields: [vehicleTypeId], references: [id])
+  vehicleTypeId   String?  @db.ObjectId
+  vehicleType     VehicleType? @relation(fields: [vehicleTypeId], references: [id])
   licensePlate    String?
-  status          String           @default("active")
+  status          String   @default("active")
   currentLatitude Float?
   currentLongitude Float?
   lastUpdatedAt   DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
   locations       LocationTracking[]
-  deliveries      Delivery[]       @relation("AssignedDeliveries")
-  sentDeliveries  Delivery[]       @relation("SenderDeliveries")
+  deliveries      Delivery[] @relation("AssignedDeliveries")
+  sentDeliveries  Delivery[] @relation("SenderDeliveries")
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
 }
 
 model VehicleType {
-  id            Int     @id @default(autoincrement())
-  name          String  @unique
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String   @unique
   maxCapacityKg Float?
   maxVolumeM3   Float?
   description   String?
@@ -45,23 +45,23 @@ model VehicleType {
 }
 
 model LocationTracking {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  latitude  Float
-  longitude Float
-  speed     Float?
-  heading   Float?
-  accuracy  Float?
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id])
+  latitude     Float
+  longitude    Float
+  speed        Float?
+  heading      Float?
+  accuracy     Float?
   batteryLevel Float?
-  timestamp DateTime @default(now())
+  timestamp    DateTime @default(now())
 }
 
 model Delivery {
-  id                   Int      @id @default(autoincrement())
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
   trackingNumber       String   @unique
+  senderId             String   @db.ObjectId
   sender               User     @relation("SenderDeliveries", fields: [senderId], references: [id])
-  senderId             Int
   recipientName        String
   recipientPhone       String
   pickupAddress        String
@@ -70,8 +70,8 @@ model Delivery {
   dropoffAddress       String
   dropoffLatitude      Float
   dropoffLongitude     Float
+  assignedRiderId      String?  @db.ObjectId
   assignedRider        User?    @relation("AssignedDeliveries", fields: [assignedRiderId], references: [id])
-  assignedRiderId      Int?
   deliveryStatus       String   @default("pending")
   estimatedDeliveryTime DateTime?
   actualDeliveryTime   DateTime?
@@ -81,46 +81,45 @@ model Delivery {
   statusLogs           DeliveryStatusLog[]
   proofOfDelivery      ProofOfDelivery?
   packages             Package[]
-
-  RouteHistory RouteHistory[]
+  routeHistory         RouteHistory[]
 }
 
 model DeliveryStatusLog {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId  String   @db.ObjectId
   delivery    Delivery @relation(fields: [deliveryId], references: [id])
-  deliveryId  Int
   status      String
+  updatedById String   @db.ObjectId
   updatedBy   User     @relation(fields: [updatedById], references: [id])
-  updatedById Int
   remarks     String?
   timestamp   DateTime @default(now())
 }
 
 model ProofOfDelivery {
-  id           Int      @id @default(autoincrement())
-  delivery     Delivery @relation(fields: [deliveryId], references: [id])
-  deliveryId   Int      @unique
-  photoUrl     String?
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId    String   @unique @db.ObjectId
+  delivery      Delivery @relation(fields: [deliveryId], references: [id])
+  photoUrl      String?
   signatureData String?
-  receivedBy   String
-  receivedAt   DateTime @default(now())
+  receivedBy    String
+  receivedAt    DateTime @default(now())
 }
 
 model RouteHistory {
-  id          Int      @id @default(autoincrement())
-  rider       User     @relation(fields: [riderId], references: [id])
-  riderId     Int
-  delivery    Delivery? @relation(fields: [deliveryId], references: [id])
-  deliveryId  Int?
-  latitude    Float
-  longitude   Float
-  recordedAt  DateTime @default(now())
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  riderId    String   @db.ObjectId
+  rider      User     @relation(fields: [riderId], references: [id])
+  deliveryId String?  @db.ObjectId
+  delivery   Delivery? @relation(fields: [deliveryId], references: [id])
+  latitude   Float
+  longitude  Float
+  recordedAt DateTime @default(now())
 }
 
 model Package {
-  id                  Int      @id @default(autoincrement())
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId          String   @db.ObjectId
   delivery            Delivery @relation(fields: [deliveryId], references: [id])
-  deliveryId          Int
   packageType         String
   weight              Float?
   dimensions          String?
@@ -128,12 +127,18 @@ model Package {
 }
 
 model Notification {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int
   title     String
   message   String
-  type      String   // e.g., "system", "alert"
+  type      String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model TrackingCounter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  date          DateTime @unique
+  counter       Int
 }

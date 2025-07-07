@@ -1,48 +1,52 @@
-import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import { typeDefs } from './graphql/schema.js';
-import { resolvers } from './graphql/resolver.js';
 import dotenv from 'dotenv';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import { execute, subscribe } from 'graphql';
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import cookieParser from 'cookie-parser'; // Import cookie-parser
+import cookieParser from 'cookie-parser';
+import { typeDefs } from './graphql/schema.js';
+import { resolvers } from './graphql/resolver.js';
 dotenv.config();
 async function init() {
     const app = express();
     const Port = process.env.PORT || 4000;
-    const URL = process.env.URL;
-    const httpsServer = http.createServer(app);
-    // Create the schema
-    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const URL = process.env.URL || 'http://localhost';
+    const httpServer = http.createServer(app);
+    // ✅ Create GraphQL schema
+    const schema = makeExecutableSchema({
+        typeDefs,
+        resolvers,
+    });
+    // ✅ Apollo Server v4 setup
     const server = new ApolloServer({
         schema,
-        plugins: [ApolloServerPluginDrainHttpServer({ httpServer: httpsServer })],
+        plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
     });
     await server.start();
-    // Subscription Server setup
-    const subscriptionServer = SubscriptionServer.create({
+    // ✅ WebSocket subscriptions
+    SubscriptionServer.create({
         schema,
         execute,
         subscribe,
-        onConnect: (connectionParams, webSocket, context) => {
-            // WebSocket connected
+        onConnect: (connectionParams) => {
+            console.log('🔌 WebSocket connected');
         },
-        onDisconnect: (webSocket, context) => {
-            // WebSocket disconnected
+        onDisconnect: () => {
+            console.log('❌ WebSocket disconnected');
         },
     }, {
-        server: httpsServer,
+        server: httpServer,
         path: '/graphql',
     });
-    // CORS Middleware - Applied first
+    // ✅ Express middlewares
     app.use(cors({
         origin: function (origin, callback) {
             const allowedOrigins = [
@@ -52,35 +56,35 @@ async function init() {
                 'http://localhost:4000',
                 'http://localhost:3001',
             ];
-            // Check if the request origin is allowed
-            if (allowedOrigins.includes(origin) || !origin) {
+            if (!origin || allowedOrigins.includes(origin)) {
                 callback(null, true);
             }
             else {
                 callback(new Error('Not allowed by CORS'));
             }
         },
-        credentials: true, // Required if you're sending cookies or authorization headers
+        credentials: true,
     }));
-    // Middleware setup
     app.use(bodyParser.json({ limit: '500mb' }));
     app.use(bodyParser.urlencoded({ limit: '500mb', extended: false }));
     app.use(compression());
     app.use(graphqlUploadExpress());
     app.use(cookieParser());
-    // Apollo middleware with context
-    app.use('/graphql', expressMiddleware(server, {
+    // ✅ Apollo middleware (🔧 TS-safe fix here)
+    app.use('/graphql', await expressMiddleware(server, {
         context: async ({ req }) => ({
             token: req.headers.token,
             cookies: req.cookies,
         }),
     }));
-    // Static file serving
+    // ✅ Static files
     app.use(express.static('json'));
     app.use(express.static('model'));
     app.use(express.static('model/category_images'));
-    // Start the server
-    await new Promise((resolve) => httpsServer.listen(Port, resolve));
+    // ✅ Start server
+    await new Promise((resolve) => httpServer.listen(Port, resolve));
     console.log(`🚀 Server ready at ${URL}:${Port}/graphql`);
 }
-init();
+init().catch((err) => {
+    console.error('❌ Server failed to start:', err);
+});

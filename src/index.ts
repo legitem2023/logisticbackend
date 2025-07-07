@@ -29,13 +29,13 @@ async function init() {
   const URL = process.env.URL || 'http://localhost';
   const httpServer = http.createServer(app);
 
-  // Create schema
+  // ✅ Create GraphQL schema
   const schema = makeExecutableSchema({
     typeDefs,
     resolvers,
   });
 
-  // Apollo server setup
+  // ✅ Apollo Server v4 setup
   const server = new ApolloServer<MyContext>({
     schema,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
@@ -43,7 +43,7 @@ async function init() {
 
   await server.start();
 
-  // Subscription Server setup
+  // ✅ WebSocket subscriptions
   SubscriptionServer.create(
     {
       schema,
@@ -62,7 +62,7 @@ async function init() {
     }
   );
 
-  // Express middlewares
+  // ✅ Express middlewares
   app.use(
     cors({
       origin: function (origin: any, callback: any) {
@@ -73,7 +73,7 @@ async function init() {
           'http://localhost:4000',
           'http://localhost:3001',
         ];
-        if (allowedOrigins.includes(origin) || !origin) {
+        if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
           callback(new Error('Not allowed by CORS'));
@@ -89,25 +89,23 @@ async function init() {
   app.use(graphqlUploadExpress());
   app.use(cookieParser());
 
-  // Apollo GraphQL middleware
-// To this:
-app.use(
-  '/graphql',
-  expressMiddleware(server, {  // ✅ Correct
-    context: async ({ req }) => ({
-      token: req.headers.token as string,
-      cookies: req.cookies,
-    }),
-  })
-);
-  
+  // ✅ Apollo middleware (🔧 TS-safe fix here)
+  app.use(
+    '/graphql',
+    await expressMiddleware(server, {
+      context: async ({ req }) => ({
+        token: req.headers.token as string,
+        cookies: req.cookies,
+      }),
+    })
+  );
 
-  // Serve static files
+  // ✅ Static files
   app.use(express.static('json'));
   app.use(express.static('model'));
   app.use(express.static('model/category_images'));
 
-  // Start server
+  // ✅ Start server
   await new Promise<void>((resolve) => httpServer.listen(Port, resolve));
   console.log(`🚀 Server ready at ${URL}:${Port}/graphql`);
 }

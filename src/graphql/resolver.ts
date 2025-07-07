@@ -1,15 +1,105 @@
 import { PrismaClient } from '@prisma/client'
+import { generateTrackingNumber } from '../../script/script.js';
 const prisma = new PrismaClient()
 
 export const resolvers = {
   Query: {
     getUsers: () => prisma.user.findMany(),
-    getUser: (_: any, args: { id: number }) => prisma.user.findUnique({ where: { id: args.id } }),
+    getUser: (_: any, args: { id: string }) => prisma.user.findUnique({ where: { id: args.id } }),
     getDeliveries: () => prisma.delivery.findMany(),
-    getDelivery: (_: any, args: { id: number }) =>
+    getDelivery: (_: any, args: { id: string }) =>
       prisma.delivery.findUnique({ where: { id: args.id } }),
 
     getVehicleTypes: () => prisma.vehicleType.findMany(),
-  }
+  },
+  Mutation:{
+    createDelivery: async (_: any, args: any) => {
+      try {
+        const {
+          senderId,
+          recipientName,
+          recipientPhone,
+          pickupAddress,
+          pickupLatitude,
+          pickupLongitude,
+          dropoffAddress,
+          dropoffLatitude,
+          dropoffLongitude,
+          assignedRiderId,
+          estimatedDeliveryTime
+        } = args.input;
 
+  const trackingNumber = await generateTrackingNumber();
+
+
+
+        const delivery = await prisma.delivery.create({
+          data: {
+            trackingNumber,
+            sender: { connect: { id: senderId } },
+            recipientName,
+            recipientPhone,
+            pickupAddress,
+            pickupLatitude,
+            pickupLongitude,
+            dropoffAddress,
+            dropoffLatitude,
+            dropoffLongitude,
+            assignedRider: assignedRiderId ? { connect: { id: assignedRiderId } } : undefined,
+            deliveryStatus: "PENDING",
+            estimatedDeliveryTime
+          },
+          include: {
+            sender: true,
+            assignedRider: true
+          }
+        })
+        console.log(trackingNumber)
+        if(delivery) {
+          return {
+            statusText: "success",
+          }
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    createRider: async (_: any, args: any) => {
+      try {
+        const {
+          name,
+          email,
+          phoneNumber,
+          vehicleTypeId,
+          licensePlate,
+          passwordHash
+        } = args.input;   
+        
+        const rider = await prisma.user.create({
+          data: {
+            name,
+            email,
+            phoneNumber,
+            licensePlate,
+            passwordHash,
+            vehicleType: {
+              connect: { id: vehicleTypeId }
+            },
+            status: 'AVAILABLE', // or default to 'INACTIVE'
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          include: {
+            vehicleType: true
+          }
+        })
+      
+        return rider
+
+      } catch (error) {
+        
+      }
+
+  }
+  }
 }

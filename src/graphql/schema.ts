@@ -118,9 +118,40 @@ type Notification {
 type Query {
   getUsers: [User!]!
   getUser(id: Int!): User
-  getDeliveries: [Delivery!]!
-  getDelivery(id: Int!): Delivery
-  getVehicleTypes: [VehicleType!]!
+  getDeliveries: [Delivery]
+  getDelivery(id:String): Delivery
+  getVehicleTypes: [VehicleType]
 }
 
+type Result {
+  statusText: String
+}
+
+input CreateDeliveryInput {
+  senderId: String
+  recipientName: String
+  recipientPhone: String
+  pickupAddress: String
+  pickupLatitude: Float
+  pickupLongitude: Float
+  dropoffAddress: String
+  dropoffLatitude: Float
+  dropoffLongitude: Float
+  assignedRiderId: Int
+  estimatedDeliveryTime: String
+}
+input CreateRiderInput {
+  name: String
+  email: String
+  phoneNumber: String
+  vehicleTypeId: String
+  licensePlate: String
+  passwordHash: String
+}
+
+type Mutation {
+  createDelivery(input: CreateDeliveryInput):Result
+  createRider(input: CreateRiderInput): Result
+
+}
 `
