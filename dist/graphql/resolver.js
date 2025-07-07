@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { generateTrackingNumber } from '../script/script.js';
 const prisma = new PrismaClient();
+import bcrypt from 'bcrypt';
+import { EncryptJWT } from 'jose';
 export const resolvers = {
     Query: {
         getUsers: () => prisma.user.findMany(),
@@ -71,6 +73,33 @@ export const resolvers = {
             }
             catch (error) {
             }
-        }
-    }
+        },
+        login: async (_, args) => {
+            const { email, password } = args.input;
+            const user = await prisma.user.findUnique({ where: { email } });
+            if (!user) {
+                throw new Error('User not found');
+            }
+            const isValid = await bcrypt.compare(password, user.passwordHash || '');
+            if (!isValid) {
+                throw new Error('Invalid credentials');
+            }
+            const secret = process.env.JWT_SECRET;
+            // Use JOSE to create encrypted token (JWE)
+            const token = await new EncryptJWT({
+                userId: user.id,
+                phoneNumber: user.phoneNumber,
+                email: user.email,
+                name: user.name
+            })
+                .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+                .setIssuedAt()
+                .setExpirationTime('7d')
+                .encrypt(secret);
+            return {
+                statusText: 'success',
+                token
+            };
+        },
+    },
 };

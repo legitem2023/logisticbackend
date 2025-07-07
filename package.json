@@ -58,6 +58,7 @@
     "graphql-tag": "^2.12.6",
     "graphql-upload": "^16.0.2",
     "graphql-ws": "^5.16.0",
+    "jose": "^6.0.11",
     "js-base64": "^3.7.7",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.14",

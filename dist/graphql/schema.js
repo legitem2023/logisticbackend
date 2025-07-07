@@ -122,6 +122,7 @@ type Query {
 
 type Result {
   statusText: String
+  token: String
 }
 
 input CreateDeliveryInput {
@@ -146,9 +147,15 @@ input CreateRiderInput {
   passwordHash: String
 }
 
+input LoginInput {
+  email: String
+  password: String
+}
+
+
 type Mutation {
   createDelivery(input: CreateDeliveryInput):Result
   createRider(input: CreateRiderInput): Result
-
+  login(input: LoginInput): Result
 }
 `;
