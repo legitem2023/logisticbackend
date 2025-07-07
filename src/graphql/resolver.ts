@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client'
-import { generateTrackingNumber } from '../../script/script.js';
+import { PrismaClient } from '@prisma/client';
+import { generateTrackingNumber } from '../script/script.js';
 const prisma = new PrismaClient()
 
 export const resolvers = {
