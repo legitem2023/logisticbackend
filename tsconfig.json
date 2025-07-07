@@ -2,8 +2,8 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "nodenext",
-    "outDir": "./dist",
-    "rootDir": "./src",              // ✅ THIS FIXES YOUR STRUCTURE
+    "outDir": "dist",
+    "rootDir": "src",              // ✅ THIS FIXES YOUR STRUCTURE
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
