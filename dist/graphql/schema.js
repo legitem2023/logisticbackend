@@ -2,18 +2,19 @@ import { gql } from 'graphql-tag';
 export const typeDefs = gql `
 
 type VehicleType {
-  id: Int!
-  name: String!
+  id: String
+  name: String
   maxCapacityKg: Float
   maxVolumeM3: Float
   description: String
-  createdAt: String!
-  updatedAt: String!
+  createdAt: String
+  updatedAt: String
+  icon: String
 }
 
 # User / Rider
 type User {
-  id: Int!
+  id: String
   name: String!
   email: String
   phoneNumber: String!
@@ -25,11 +26,12 @@ type User {
   lastUpdatedAt: String
   createdAt: String!
   updatedAt: String!
+  role: String
 }
 
 # Location Tracking
 type LocationTracking {
-  id: Int!
+  id: String!
   user: User!
   latitude: Float!
   longitude: Float!
@@ -42,7 +44,7 @@ type LocationTracking {
 
 # Delivery
 type Delivery {
-  id: Int!
+  id: String!
   trackingNumber: String!
   sender: User!
   recipientName: String!
@@ -63,7 +65,7 @@ type Delivery {
 
 # Delivery Status Log
 type DeliveryStatusLog {
-  id: Int!
+  id: String!
   delivery: Delivery!
   status: String!
   updatedBy: User!
@@ -73,7 +75,7 @@ type DeliveryStatusLog {
 
 # Proof of Delivery
 type ProofOfDelivery {
-  id: Int!
+  id: String!
   delivery: Delivery!
   photoUrl: String
   signatureData: String
@@ -83,7 +85,7 @@ type ProofOfDelivery {
 
 # Route History
 type RouteHistory {
-  id: Int!
+  id: String!
   rider: User!
   delivery: Delivery
   latitude: Float!
@@ -93,7 +95,7 @@ type RouteHistory {
 
 # Package
 type Package {
-  id: Int!
+  id: String!
   delivery: Delivery!
   packageType: String!
   weight: Float
@@ -103,7 +105,7 @@ type Package {
 
 # Notification
 type Notification {
-  id: Int!
+  id: String!
   user: User!
   title: String!
   message: String!
@@ -118,6 +120,7 @@ type Query {
   getDeliveries: [Delivery]
   getDelivery(id:String): Delivery
   getVehicleTypes: [VehicleType]
+  getRiders: [User]
 }
 
 type Result {
@@ -144,7 +147,7 @@ input CreateRiderInput {
   phoneNumber: String
   vehicleTypeId: String
   licensePlate: String
-  passwordHash: String
+  password: String
 }
 
 input LoginInput {
@@ -152,10 +155,17 @@ input LoginInput {
   password: String
 }
 
+input GoogleLoginInput {
+  idToken: String!
+}
+
+
 
 type Mutation {
   createDelivery(input: CreateDeliveryInput):Result
   createRider(input: CreateRiderInput): Result
   login(input: LoginInput): Result
+  loginWithGoogle(input: GoogleLoginInput!): Result
+  loginWithFacebook(input: GoogleLoginInput!): Result
 }
 `;
