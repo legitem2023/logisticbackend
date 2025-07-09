@@ -16,9 +16,10 @@ type VehicleType {
 # User / Rider
 type User {
   id: String
-  name: String!
+  image: String
+  name: String
   email: String
-  phoneNumber: String!
+  phoneNumber: String
   vehicleType: VehicleType
   licensePlate: String
   status: String
