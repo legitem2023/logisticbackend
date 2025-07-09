@@ -13,6 +13,7 @@ type VehicleType {
   createdAt: String
   updatedAt: String
   icon: String
+  cost: Float
 }
 
 # User / Rider

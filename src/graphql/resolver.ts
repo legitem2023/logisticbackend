@@ -143,8 +143,8 @@ createRider: async (_: any, args: any) => {
 
     // const secret:any = process.env.JWT_SECRET;
 
-    const rawSecret = process.env.JWT_SECRET || 'fallback-secret';
-    const secret = new TextEncoder().encode(rawSecret); // ✅ Uint8Array
+    const rawSecret = process.env.JWT_SECRET;
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
 
 
     // Use JOSE to create encrypted token (JWE)
