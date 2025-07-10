@@ -42,13 +42,53 @@ export const resolvers = {
           dropoffLatitude,
           dropoffLongitude,
           assignedRiderId,
-          estimatedDeliveryTime
+          estimatedDeliveryTime // this is a string
         } = args.input;
-
-  const trackingNumber = await generateTrackingNumber();
-
-
-
+    
+        // ✅ 1. Validate sender exists
+        const sender = await prisma.user.findUnique({
+          where: { id: senderId }
+        });
+    
+        if (!sender) {
+          return {
+            statusText: "error "+sender,
+            message: `Sender with ID ${senderId} not found.`
+          };
+        }
+    
+        // ✅ 2. Validate assigned rider if provided
+        let riderExists = null;
+        if (assignedRiderId) {
+          riderExists = await prisma.user.findUnique({
+            where: { id: assignedRiderId }
+          });
+    
+          if (!riderExists) {
+            return {
+              statusText: "error"+riderExists,
+              message: `Assigned rider with ID ${assignedRiderId} not found.`
+            };
+          }
+        }
+    
+        // ✅ 3. Safely parse estimatedDeliveryTime
+        let parsedEstimatedTime: Date | undefined = undefined;
+        if (estimatedDeliveryTime) {
+          const parsed = new Date(estimatedDeliveryTime);
+          if (isNaN(parsed.getTime())) {
+            return {
+              statusText: "error"+estimatedDeliveryTime,
+              message: `Invalid date format for estimatedDeliveryTime: ${estimatedDeliveryTime}`
+            };
+          }
+          parsedEstimatedTime = parsed;
+        }
+    
+        // ✅ 4. Generate tracking number
+        const trackingNumber = await generateTrackingNumber();
+    
+        // ✅ 5. Create the delivery
         const delivery = await prisma.delivery.create({
           data: {
             trackingNumber,
@@ -63,24 +103,28 @@ export const resolvers = {
             dropoffLongitude,
             assignedRider: assignedRiderId ? { connect: { id: assignedRiderId } } : undefined,
             deliveryStatus: "PENDING",
-            estimatedDeliveryTime
+            estimatedDeliveryTime: parsedEstimatedTime
           },
           include: {
             sender: true,
             assignedRider: true
           }
-        })
-        console.log(trackingNumber)
-        if(delivery) {
-          return {
-            statusText: "success",
-          }
-        }
-      } catch (error) {
-        console.log(error)
+        });
+    
+        return {
+          statusText: "success",
+          delivery
+        };
+    
+      } catch (error: any) {
+        console.error("Delivery creation error:", error);
+        return {
+          statusText: "error"+error,
+          message: error.message || "Something went wrong"
+        };
       }
     },
-
+    
 createRider: async (_: any, args: any) => {
   try {
     const {
@@ -130,10 +174,7 @@ createRider: async (_: any, args: any) => {
     if (!user) {
       throw new Error('User not found');
     }
-    // const isValid = await bcrypt.compare(password, user.passwordHash || '');
-    // if (!isValid) {
-    //   throw new Error('Invalid credentials');
-    // }
+   
     const isValid = await comparePassword(password, user.passwordHash || '');
 
     if (!isValid) {
@@ -148,7 +189,9 @@ createRider: async (_: any, args: any) => {
       userId: user.id,
       phoneNumber: user.phoneNumber,
       email: user.email,
-      name: user.name
+      name: user.name,
+      role:user.role,
+      image:user.image
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()
@@ -195,7 +238,9 @@ createRider: async (_: any, args: any) => {
       userId: user.id,
       phoneNumber: user.phoneNumber,
       email: user.email,
-      name: user.name
+      name: user.name,
+      role:user.role,
+      image:user.image
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()

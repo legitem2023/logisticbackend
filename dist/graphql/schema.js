@@ -140,7 +140,7 @@ input CreateDeliveryInput {
   dropoffAddress: String
   dropoffLatitude: Float
   dropoffLongitude: Float
-  assignedRiderId: Int
+  assignedRiderId: String
   estimatedDeliveryTime: String
 }
 input CreateRiderInput {

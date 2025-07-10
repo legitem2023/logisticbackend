@@ -28,8 +28,46 @@ export const resolvers = {
     Mutation: {
         createDelivery: async (_, args) => {
             try {
-                const { senderId, recipientName, recipientPhone, pickupAddress, pickupLatitude, pickupLongitude, dropoffAddress, dropoffLatitude, dropoffLongitude, assignedRiderId, estimatedDeliveryTime } = args.input;
+                const { senderId, recipientName, recipientPhone, pickupAddress, pickupLatitude, pickupLongitude, dropoffAddress, dropoffLatitude, dropoffLongitude, assignedRiderId, estimatedDeliveryTime // this is a string
+                 } = args.input;
+                // ✅ 1. Validate sender exists
+                const sender = await prisma.user.findUnique({
+                    where: { id: senderId }
+                });
+                if (!sender) {
+                    return {
+                        statusText: "error " + sender,
+                        message: `Sender with ID ${senderId} not found.`
+                    };
+                }
+                // ✅ 2. Validate assigned rider if provided
+                let riderExists = null;
+                if (assignedRiderId) {
+                    riderExists = await prisma.user.findUnique({
+                        where: { id: assignedRiderId }
+                    });
+                    if (!riderExists) {
+                        return {
+                            statusText: "error" + riderExists,
+                            message: `Assigned rider with ID ${assignedRiderId} not found.`
+                        };
+                    }
+                }
+                // ✅ 3. Safely parse estimatedDeliveryTime
+                let parsedEstimatedTime = undefined;
+                if (estimatedDeliveryTime) {
+                    const parsed = new Date(estimatedDeliveryTime);
+                    if (isNaN(parsed.getTime())) {
+                        return {
+                            statusText: "error" + estimatedDeliveryTime,
+                            message: `Invalid date format for estimatedDeliveryTime: ${estimatedDeliveryTime}`
+                        };
+                    }
+                    parsedEstimatedTime = parsed;
+                }
+                // ✅ 4. Generate tracking number
                 const trackingNumber = await generateTrackingNumber();
+                // ✅ 5. Create the delivery
                 const delivery = await prisma.delivery.create({
                     data: {
                         trackingNumber,
@@ -44,22 +82,24 @@ export const resolvers = {
                         dropoffLongitude,
                         assignedRider: assignedRiderId ? { connect: { id: assignedRiderId } } : undefined,
                         deliveryStatus: "PENDING",
-                        estimatedDeliveryTime
+                        estimatedDeliveryTime: parsedEstimatedTime
                     },
                     include: {
                         sender: true,
                         assignedRider: true
                     }
                 });
-                console.log(trackingNumber);
-                if (delivery) {
-                    return {
-                        statusText: "success",
-                    };
-                }
+                return {
+                    statusText: "success",
+                    delivery
+                };
             }
             catch (error) {
-                console.log(error);
+                console.error("Delivery creation error:", error);
+                return {
+                    statusText: "error" + error,
+                    message: error.message || "Something went wrong"
+                };
             }
         },
         createRider: async (_, args) => {
@@ -101,10 +141,6 @@ export const resolvers = {
             if (!user) {
                 throw new Error('User not found');
             }
-            // const isValid = await bcrypt.compare(password, user.passwordHash || '');
-            // if (!isValid) {
-            //   throw new Error('Invalid credentials');
-            // }
             const isValid = await comparePassword(password, user.passwordHash || '');
             if (!isValid) {
                 throw new Error('Invalid credentials');
@@ -115,7 +151,9 @@ export const resolvers = {
                 userId: user.id,
                 phoneNumber: user.phoneNumber,
                 email: user.email,
-                name: user.name
+                name: user.name,
+                role: user.role,
+                image: user.image
             })
                 .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
                 .setIssuedAt()
@@ -156,7 +194,9 @@ export const resolvers = {
                 userId: user.id,
                 phoneNumber: user.phoneNumber,
                 email: user.email,
-                name: user.name
+                name: user.name,
+                role: user.role,
+                image: user.image
             })
                 .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
                 .setIssuedAt()

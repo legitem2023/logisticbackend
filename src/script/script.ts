@@ -32,20 +32,23 @@ export async function comparePassword(plainPassword: string, hashedPassword: str
 
 const prisma = new PrismaClient()
 
+
 export async function generateTrackingNumber(): Promise<string> {
-  const today = new Date()
-  const dateStr = format(today, 'yyyyMMdd')
+  // Get today's date at 00:00:00
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
+  // Use this for the tracking number string only
+  const dateStr = format(today, 'yyyyMMdd');
+
+  // Use `today` (Date object) directly in the database
   const trackingCounter = await prisma.trackingCounter.upsert({
-    where: { date: new Date(dateStr) },
+    where: { date: today },
     update: { counter: { increment: 1 } },
-    create: {
-      date: new Date(dateStr),
-      counter: 1
-    }
-  })
+    create: { date: today, counter: 1 }
+  });
 
-  const paddedCounter = trackingCounter.counter.toString().padStart(6, '0')
+  const paddedCounter = trackingCounter.counter.toString().padStart(6, '0');
 
-  return `TRK-${dateStr}-${paddedCounter}`
+  return `TRK-${dateStr}-${paddedCounter}`;
 }
