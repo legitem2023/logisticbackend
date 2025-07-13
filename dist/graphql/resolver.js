@@ -2,10 +2,13 @@ import { PrismaClient } from '@prisma/client';
 import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
+import { PubSub, withFilter } from "graphql-subscriptions";
 const prisma = new PrismaClient();
 import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const pubsub = new PubSub();
+const LOCATION_TRACKING = [];
 export const resolvers = {
     Query: {
         getUsers: async (_, args) => { return await prisma.user.findMany(); },
@@ -13,6 +16,17 @@ export const resolvers = {
         getDeliveries: async (_, args) => { return await prisma.delivery.findMany(); },
         getDelivery: async (_, args) => {
             return await prisma.delivery.findUnique({ where: { id: args.id } });
+        },
+        getRidersDelivery: async (_, args) => {
+            const data = await prisma.delivery.findMany({
+                where: {
+                    assignedRiderId: args.id, // Filter deliveries where this rider is assigned
+                },
+                include: {
+                    assignedRider: true, // Include full rider info in the response
+                },
+            });
+            return data;
         },
         getVehicleTypes: async (_, _args) => {
             const data = await prisma.vehicleType.findMany();
@@ -208,22 +222,28 @@ export const resolvers = {
             };
         },
         loginWithFacebook: async (_, args) => {
+            var _a, _b, _c;
             const { accessToken } = args.input;
             // 1. Verify the token with Facebook Graph API
-            const fbRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`);
+            const fbRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`);
             const fbUser = await fbRes.json();
+            console.log(fbUser);
             if (!fbUser || !fbUser.id) {
                 throw new Error('Invalid Facebook token');
             }
+            const avatarUrl = (_c = (_b = (_a = fbUser.picture) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.url) !== null && _c !== void 0 ? _c : '';
             // 2. Find or create user in your DB
-            let user = await prisma.user.findUnique({ where: { email: fbUser.email } });
+            let user = await prisma.user.findUnique({
+                where: { email: fbUser.email },
+            });
             if (!user) {
                 user = await prisma.user.create({
                     data: {
                         name: fbUser.name,
                         email: fbUser.email,
-                        phoneNumber: '', // FB doesn't provide
-                        passwordHash: '', // empty or random
+                        phoneNumber: '', // Facebook doesn't provide it
+                        passwordHash: '', // Use empty or a random placeholder
+                        image: avatarUrl,
                     },
                 });
             }
@@ -232,6 +252,8 @@ export const resolvers = {
                 userId: user.id,
                 email: user.email,
                 name: user.name,
+                role: user.role,
+                image: user.image
             })
                 .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
                 .setIssuedAt()
@@ -242,5 +264,23 @@ export const resolvers = {
                 token
             };
         },
+        locationTracking: async (_, args) => {
+            try {
+                pubsub.publish(LOCATION_TRACKING, { LocationTracking: args.input });
+                return args.input;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
     },
+    Subscription: {
+        LocationTracking: {
+            subscribe: withFilter(() => pubsub.asyncIterator(LOCATION_TRACKING), (payload, variables) => {
+                if (!variables.userID)
+                    return true;
+                return payload.LocationTracking.userID === variables.userID;
+            }),
+        },
+    }
 };

@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
+import { PubSub, withFilter } from "graphql-subscriptions";
+
 
 const prisma = new PrismaClient()
 import bcrypt from 'bcrypt';
@@ -9,6 +11,8 @@ import jwt from 'jsonwebtoken';
 import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const pubsub = new PubSub();
+const LOCATION_TRACKING: any = [];
 export const resolvers = {
   Query: {
     getUsers: async (_: any, args: { id: string }) => {return await prisma.user.findMany()},
@@ -16,6 +20,18 @@ export const resolvers = {
     getDeliveries: async (_: any, args: { id: string }) => { return await prisma.delivery.findMany()},
     getDelivery: async (_: any, args: { id: string }) => {
       return  await prisma.delivery.findUnique({ where:  { id: args.id } })
+    },
+    getRidersDelivery: async (_: any, args: { id: string }) => {
+      const data = await prisma.delivery.findMany({
+        where: {
+          assignedRiderId: args.id, // Filter deliveries where this rider is assigned
+        },
+        include: {
+          assignedRider: true, // Include full rider info in the response
+        },
+      });
+
+      return data;
     },
     getVehicleTypes: async (_:any,_args:any) => {
       const data = await prisma.vehicleType.findMany();
@@ -123,52 +139,51 @@ export const resolvers = {
           message: error.message || "Something went wrong"
         };
       }
-    },
-    
-createRider: async (_: any, args: any) => {
-  try {
-    const {
-      name,
-      email,
-      phoneNumber,
-      vehicleTypeId,
-      licensePlate,
-      password // Expect plain text password here
-    } = args.input;
+    },    
+    createRider: async (_: any, args: any) => {
+      try {
+        const {
+          name,
+          email,
+          phoneNumber,
+          vehicleTypeId,
+          licensePlate,
+          password // Expect plain text password here
+        } = args.input;
 
-    console.log("Received input:", args.input);
+        console.log("Received input:", args.input);
 
-    const passwordHash = await encryptPassword(password, 10);
+        const passwordHash = await encryptPassword(password, 10);
 
-    const rider = await prisma.user.create({
-      data: {
-        name,
-        email,
-        phoneNumber,
-        licensePlate,
-        passwordHash, // Now correctly named and stored
-        role: 'RIDER',
-        vehicleType: {
-          connect: { id: vehicleTypeId }
-        },
-        status: 'AVAILABLE',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
-      include: {
-        vehicleType: true
+        const rider = await prisma.user.create({
+          data: {
+            name,
+            email,
+            phoneNumber,
+            licensePlate,
+            passwordHash, // Now correctly named and stored
+            role: 'RIDER',
+            vehicleType: {
+              connect: { id: vehicleTypeId }
+            },
+            status: 'AVAILABLE',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          include: {
+            vehicleType: true
+          }
+        });
+
+        console.log("Created rider:", rider);
+        return rider;
+
+      } catch (error) {
+        console.error("Error in createRider:", error); // 🔥 Now you’ll see the real problem
+        throw new Error("Failed to create rider.");
       }
-    });
-
-    console.log("Created rider:", rider);
-    return rider;
-
-  } catch (error) {
-    console.error("Error in createRider:", error); // 🔥 Now you’ll see the real problem
-    throw new Error("Failed to create rider.");
-  }
-},
-   login: async (_: any, args: any) => {
+    },
+    login: async (_: any, args: any) => {
     const { email, password } = args.input;
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -202,8 +217,8 @@ createRider: async (_: any, args: any) => {
       statusText: 'success',
       token
     };
-   },
-   loginWithGoogle: async (_: any, args: any) => {
+    },
+    loginWithGoogle: async (_: any, args: any) => {
     const { idToken } = args.input;
     // Verify Google ID token
     const ticket = await client.verifyIdToken({
@@ -251,37 +266,47 @@ createRider: async (_: any, args: any) => {
       statusText: 'success',
       token
     };
-  },
-  loginWithFacebook: async (_: any, args: any) => {
+    },
+    loginWithFacebook: async (_: any, args: any) => {
     const { accessToken } = args.input;
 
-    // 1. Verify the token with Facebook Graph API
-    const fbRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`);
-    const fbUser = await fbRes.json();
+// 1. Verify the token with Facebook Graph API
+const fbRes = await fetch(
+  `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`
+);
+const fbUser = await fbRes.json();
+console.log(fbUser);
+if (!fbUser || !fbUser.id) {
+  throw new Error('Invalid Facebook token');
+}
 
-    if (!fbUser || !fbUser.id) {
-      throw new Error('Invalid Facebook token');
-    }
+const avatarUrl = fbUser.picture?.data?.url ?? '';
 
-    // 2. Find or create user in your DB
-    let user = await prisma.user.findUnique({ where: { email: fbUser.email } });
+// 2. Find or create user in your DB
+let user = await prisma.user.findUnique({
+  where: { email: fbUser.email },
+});
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          name: fbUser.name,
-          email: fbUser.email,
-          phoneNumber: '', // FB doesn't provide
-          passwordHash: '', // empty or random
-        },
-      });
-    }
+if (!user) {
+  user = await prisma.user.create({
+    data: {
+      name: fbUser.name,
+      email: fbUser.email,
+      phoneNumber: '', // Facebook doesn't provide it
+      passwordHash: '', // Use empty or a random placeholder
+      image: avatarUrl,
+    },
+  });
+}
+
 
     // 3. Return encrypted JWT
     const token = await new EncryptJWT({
       userId: user.id,
       email: user.email,
       name: user.name,
+      role:user.role,
+      image:user.image
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()
@@ -292,7 +317,26 @@ createRider: async (_: any, args: any) => {
       statusText: 'success',
       token
     };
-  },
+    },
+    locationTracking: async (_: any, args: any) => {
+    try {
+      pubsub.publish(LOCATION_TRACKING, { LocationTracking: args.input });
+      return args.input;
+     } catch (error) {
+      console.log(error);
+    }
+    }
  },
+Subscription: {
+  LocationTracking: {
+    subscribe: withFilter(
+      () => pubsub.asyncIterator(LOCATION_TRACKING),
+      (payload, variables) => {
+        if (!variables.userID) return true;
+        return payload.LocationTracking.userID === variables.userID;
+      }
+    ),
+  },
 }
 
+}

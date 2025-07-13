@@ -66,6 +66,8 @@ type Delivery {
   actualDeliveryTime: String
   createdAt: String!
   updatedAt: String!
+  senderId: String
+  assignedRiderId: String
 }
 
 # Delivery Status Log
@@ -124,6 +126,7 @@ type Query {
   getUser(id: Int!): User
   getDeliveries: [Delivery]
   getDelivery(id:String): Delivery
+  getRidersDelivery(id: String): [Delivery]
   getVehicleTypes: [VehicleType]
   getRiders: [User]
 }
@@ -165,6 +168,28 @@ input GoogleLoginInput {
 }
 
 
+type LocationTrackingData {
+  userID: String
+  latitude: Float
+  longitude: Float
+  speed: Float
+  heading: Float
+  accuracy: Float
+  batteryLevel: Float
+  timestamp: String
+}
+
+input LocationTrackingInput {
+  userID: String
+  latitude: Float
+  longitude: Float
+  speed: Float
+  heading: Float
+  accuracy: Float
+  batteryLevel: Float
+  timestamp: String
+}
+
 
 type Mutation {
   createDelivery(input: CreateDeliveryInput):Result
@@ -172,5 +197,10 @@ type Mutation {
   login(input: LoginInput): Result
   loginWithGoogle(input: GoogleLoginInput!): Result
   loginWithFacebook(input: GoogleLoginInput!): Result
+  locationTracking(input: LocationTrackingInput): LocationTrackingData
+}
+
+type Subscription {
+    LocationTracking(userID: String): LocationTrackingData
 }
 `

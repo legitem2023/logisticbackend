@@ -1,0 +1,15 @@
+overwrite: true
+schema:
+  - src/graphql/schema.ts:
+      loader: '@graphql-tools/load-files'
+      pluck: true
+documents: "src/**/*.graphql" # Or ts/tsx if queries are inside components
+generates:
+  src/generated/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      reactApolloVersion: 3
+      withHooks: true
