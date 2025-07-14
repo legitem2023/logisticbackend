@@ -11,8 +11,9 @@ import jwt from 'jsonwebtoken';
 import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const pubsub = new PubSub();
-const LOCATION_TRACKING: any = [];
+export const pubsub = new PubSub();
+const LOCATION_TRACKING: any = "";
+const NOTIFICATION_RECEIVED:any = "";
 export const resolvers = {
   Query: {
     getUsers: async (_: any, args: { id: string }) => {return await prisma.user.findMany()},
@@ -325,17 +326,57 @@ if (!user) {
      } catch (error) {
       console.log(error);
     }
-    }
+    },
+    sendNotification: async(_:any, { userID, title, message, type }:any) => {
+      const notification = {
+        id: String(Date.now()),
+        user: { id: userID, name: "Test User" },
+        title,
+        message,
+        type,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      };
+      await prisma.notification.create({
+        data: {
+          userId: notification.user.id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          isRead: notification.isRead,
+          createdAt: new Date(notification.createdAt)
+      }});
+      pubsub.publish(NOTIFICATION_RECEIVED, {
+        notificationReceived: notification,
+      });
+
+      return notification;
+    },
+
  },
 Subscription: {
   LocationTracking: {
     subscribe: withFilter(
-      () => pubsub.asyncIterator(LOCATION_TRACKING),
+      () => {
+        const iterator = pubsub.asyncIterator([LOCATION_TRACKING]);
+        return iterator;
+      },
       (payload, variables) => {
         if (!variables.userID) return true;
         return payload.LocationTracking.userID === variables.userID;
       }
     ),
+  },
+  notificationReceived: {
+    subscribe: withFilter(
+      () => {
+        const iterator = pubsub.asyncIterator([NOTIFICATION_RECEIVED]);
+        return iterator;
+      },
+      (payload, variables) => {
+        return payload.notificationReceived.user.id === variables.userID;
+      }
+    )
   },
 }
 

@@ -112,13 +112,14 @@ type Package {
 
 # Notification
 type Notification {
-  id: String!
-  user: User!
-  title: String!
-  message: String!
-  type: String!
-  isRead: Boolean!
-  createdAt: String!
+  id: String
+  user: User
+  userId: String
+  title: String
+  message: String
+  type: String
+  isRead: Boolean
+  createdAt: String
 }
 
 type Query {
@@ -129,6 +130,7 @@ type Query {
   getRidersDelivery(id: String): [Delivery]
   getVehicleTypes: [VehicleType]
   getRiders: [User]
+  getNotifications: [Notification]
 }
 
 type Result {
@@ -198,9 +200,11 @@ type Mutation {
   loginWithGoogle(input: GoogleLoginInput!): Result
   loginWithFacebook(input: GoogleLoginInput!): Result
   locationTracking(input: LocationTrackingInput): LocationTrackingData
+  sendNotification(userID: String!, title: String!, message: String!, type: String!): Notification
 }
 
 type Subscription {
     LocationTracking(userID: String): LocationTrackingData
+    notificationReceived(userID: String): Notification
 }
 `
