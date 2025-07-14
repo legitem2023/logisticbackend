@@ -398,6 +398,46 @@ export const resolvers = {
                 };
             }
             return updated;
+        },
+        cancelDelivery: async (_, { deliveryId, riderId }) => {
+            var _a;
+            const updated = await prisma.delivery.update({
+                where: { id: deliveryId },
+                data: {
+                    assignedRiderId: riderId,
+                    deliveryStatus: "Cancelled",
+                    statusLogs: {
+                        create: {
+                            status: "Cancelled",
+                            updatedById: riderId,
+                            timestamp: new Date(),
+                            remarks: "Delivery Cancelled",
+                        },
+                    },
+                },
+                include: {
+                    assignedRider: true,
+                },
+            });
+            const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
+            const notification = {
+                id: String(Date.now()),
+                user: { id: riderId, name: Rider },
+                title: "Delivery Cancelled",
+                message: `Delivery Cancelled by ${Rider}`,
+                type: "delivery",
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            };
+            pubsub.publish(NOTIFICATION_RECEIVED, {
+                notificationReceived: notification,
+            });
+            if (updated) {
+                return {
+                    statusText: "success",
+                };
+            }
+            return updated;
         }
     },
     Subscription: {

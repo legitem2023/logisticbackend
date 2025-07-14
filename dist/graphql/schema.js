@@ -215,7 +215,7 @@ type Mutation {
   sendNotification(userID: String!, title: String!, message: String!, type: String!): Notification
   acceptDelivery(deliveryId: String!, riderId: String!): Result
   finishDelivery(deliveryId: String!, riderId: String!): Result
-
+  cancelDelivery(deliveryId: String!, riderId: String!): Result
 }
 
 type Subscription {
