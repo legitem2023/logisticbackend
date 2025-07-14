@@ -55,7 +55,8 @@ async function init() {
                 'http://localhost:3000',
                 'http://localhost:4000',
                 'http://localhost:3001',
-                'https://logisticfrontend.vercel.app'
+                'https://logisticfrontend.vercel.app',
+                'https://logisticfrontend.onrender.com'
             ];
             if (!origin || allowedOrigins.includes(origin)) {
                 callback(null, true);

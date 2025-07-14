@@ -38,13 +38,29 @@ export const resolvers = {
             const data = await prisma.user.findMany({ where: { role: 'RIDER' } });
             console.log(data);
             return data;
+        },
+        getNotifications: async (_, args) => {
+            try {
+                const Notification = await prisma.notification.findMany({
+                    where: {
+                        userId: args.id
+                    }
+                });
+                pubsub.publish(NOTIFICATION_RECEIVED, {
+                    notificationReceived: Notification,
+                });
+                return Notification;
+            }
+            catch (error) {
+                console.log(error);
+            }
         }
     },
     Mutation: {
         createDelivery: async (_, args) => {
             try {
-                const { senderId, recipientName, recipientPhone, pickupAddress, pickupLatitude, pickupLongitude, dropoffAddress, dropoffLatitude, dropoffLongitude, assignedRiderId, estimatedDeliveryTime // this is a string
-                 } = args.input;
+                const { senderId, recipientName, recipientPhone, pickupAddress, pickupLatitude, pickupLongitude, dropoffAddress, dropoffLatitude, dropoffLongitude, assignedRiderId, estimatedDeliveryTime, // this is a string
+                deliveryType, paymentStatus, paymentMethod, deliveryFee } = args.input;
                 // ✅ 1. Validate sender exists
                 const sender = await prisma.user.findUnique({
                     where: { id: senderId }
@@ -96,8 +112,12 @@ export const resolvers = {
                         dropoffLatitude,
                         dropoffLongitude,
                         assignedRider: assignedRiderId ? { connect: { id: assignedRiderId } } : undefined,
-                        deliveryStatus: "PENDING",
-                        estimatedDeliveryTime: parsedEstimatedTime
+                        deliveryStatus: "Pending",
+                        estimatedDeliveryTime: parsedEstimatedTime,
+                        deliveryType,
+                        paymentStatus,
+                        paymentMethod,
+                        deliveryFee
                     },
                     include: {
                         sender: true,
@@ -299,6 +319,86 @@ export const resolvers = {
             });
             return notification;
         },
+        acceptDelivery: async (_, { deliveryId, riderId }) => {
+            var _a;
+            const updated = await prisma.delivery.update({
+                where: { id: deliveryId },
+                data: {
+                    assignedRiderId: riderId,
+                    deliveryStatus: "in_transit",
+                    statusLogs: {
+                        create: {
+                            status: "in_transit",
+                            updatedById: riderId,
+                            timestamp: new Date(),
+                            remarks: "Rider accepted the delivery",
+                        },
+                    },
+                },
+                include: {
+                    assignedRider: true,
+                },
+            });
+            const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
+            const notification = {
+                id: String(Date.now()),
+                user: { id: riderId, name: "Test User" },
+                title: "Delivery Accepted",
+                message: `Delivery accepted by ${Rider}`,
+                type: "delivery",
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            };
+            pubsub.publish(NOTIFICATION_RECEIVED, {
+                notificationReceived: notification,
+            });
+            if (updated) {
+                return {
+                    statusText: "success",
+                };
+            }
+            return updated;
+        },
+        finishDelivery: async (_, { deliveryId, riderId }) => {
+            var _a;
+            const updated = await prisma.delivery.update({
+                where: { id: deliveryId },
+                data: {
+                    assignedRiderId: riderId,
+                    deliveryStatus: "Delivered",
+                    statusLogs: {
+                        create: {
+                            status: "Delivered",
+                            updatedById: riderId,
+                            timestamp: new Date(),
+                            remarks: "Rider delivered the delivery",
+                        },
+                    },
+                },
+                include: {
+                    assignedRider: true,
+                },
+            });
+            const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
+            const notification = {
+                id: String(Date.now()),
+                user: { id: riderId, name: Rider },
+                title: "Delivery Finished",
+                message: `Delivery Finished by ${Rider}`,
+                type: "delivery",
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            };
+            pubsub.publish(NOTIFICATION_RECEIVED, {
+                notificationReceived: notification,
+            });
+            if (updated) {
+                return {
+                    statusText: "success",
+                };
+            }
+            return updated;
+        }
     },
     Subscription: {
         LocationTracking: {

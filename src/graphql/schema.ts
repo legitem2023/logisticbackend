@@ -66,6 +66,16 @@ type Delivery {
   actualDeliveryTime: String
   createdAt: String!
   updatedAt: String!
+
+  deliveryType:String
+  paymentStatus:   String
+  paymentMethod:  String
+  deliveryFee: Float
+  isCancelled:      Boolean
+  cancellationReason: String
+  failedAttemptReason: String
+  currentLatitude:   Float
+  currentLongitude:  Float
   senderId: String
   assignedRiderId: String
 }
@@ -130,7 +140,7 @@ type Query {
   getRidersDelivery(id: String): [Delivery]
   getVehicleTypes: [VehicleType]
   getRiders: [User]
-  getNotifications: [Notification]
+  getNotifications(id:String): [Notification]
 }
 
 type Result {
@@ -150,6 +160,11 @@ input CreateDeliveryInput {
   dropoffLongitude: Float
   assignedRiderId: String
   estimatedDeliveryTime: String
+  deliveryType: String
+  paymentStatus: String
+  paymentMethod: String
+  deliveryFee: Float
+
 }
 input CreateRiderInput {
   name: String
@@ -201,6 +216,9 @@ type Mutation {
   loginWithFacebook(input: GoogleLoginInput!): Result
   locationTracking(input: LocationTrackingInput): LocationTrackingData
   sendNotification(userID: String!, title: String!, message: String!, type: String!): Notification
+  acceptDelivery(deliveryId: String!, riderId: String!): Result
+  finishDelivery(deliveryId: String!, riderId: String!): Result
+
 }
 
 type Subscription {

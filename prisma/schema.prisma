@@ -79,6 +79,15 @@ model Delivery {
   actualDeliveryTime   DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+  
+  deliveryType         String? // e.g., "standard", "express"
+  paymentStatus        String? // e.g., "unpaid", "paid", "refunded"
+  paymentMethod        String? // e.g., "cash", "credit_card", "gcash"
+  deliveryFee          Float?
+  cancellationReason   String?
+  failedAttemptReason  String?
+  currentLatitude      Float?
+  currentLongitude     Float?
 
   statusLogs           DeliveryStatusLog[]
   proofOfDelivery      ProofOfDelivery?
