@@ -12,11 +12,23 @@ const LOCATION_TRACKING = "";
 const NOTIFICATION_RECEIVED = "";
 export const resolvers = {
     Query: {
-        getUsers: async (_, args) => { return await prisma.user.findMany(); },
-        getUser: async (_, args) => { return await prisma.user.findUnique({ where: { id: args.id } }); },
-        getDeliveries: async (_, args) => { return await prisma.delivery.findMany(); },
+        getUsers: async (_, args) => {
+            return await prisma.user.findMany();
+        },
+        getUser: async (_, args) => {
+            return await prisma.user.findUnique({ where: { id: args.id } });
+        },
+        getDeliveries: async (_, args) => {
+            return await prisma.delivery.findMany();
+        },
         getDelivery: async (_, args) => {
-            return await prisma.delivery.findUnique({ where: { id: args.id } });
+            return await prisma.delivery.findUnique({
+                where: { id: args.id },
+                include: {
+                    sender: true, // include rider info
+                    assignedRider: true
+                },
+            });
         },
         getRidersDelivery: async (_, args) => {
             const data = await prisma.delivery.findMany({

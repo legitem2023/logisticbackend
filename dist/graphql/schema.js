@@ -26,8 +26,8 @@ type User {
   currentLatitude: Float
   currentLongitude: Float
   lastUpdatedAt: String
-  createdAt: String!
-  updatedAt: String!
+  createdAt: String
+  updatedAt: String
   role: String
 }
 
@@ -46,23 +46,23 @@ type LocationTracking {
 
 # Delivery
 type Delivery {
-  id: String!
-  trackingNumber: String!
-  sender: User!
-  recipientName: String!
-  recipientPhone: String!
-  pickupAddress: String!
-  pickupLatitude: Float!
-  pickupLongitude: Float!
-  dropoffAddress: String!
-  dropoffLatitude: Float!
-  dropoffLongitude: Float!
+  id: String
+  trackingNumber: String
+  sender: User
+  recipientName: String
+  recipientPhone: String
+  pickupAddress: String
+  pickupLatitude: Float
+  pickupLongitude: Float
+  dropoffAddress: String
+  dropoffLatitude: Float
+  dropoffLongitude: Float
   assignedRider: User
-  deliveryStatus: String!
+  deliveryStatus: String
   estimatedDeliveryTime: String
   actualDeliveryTime: String
-  createdAt: String!
-  updatedAt: String!
+  createdAt: String
+  updatedAt: String
 
   deliveryType:String
   paymentStatus:   String
@@ -79,12 +79,12 @@ type Delivery {
 
 # Delivery Status Log
 type DeliveryStatusLog {
-  id: String!
-  delivery: Delivery!
-  status: String!
-  updatedBy: User!
+  id: String
+  delivery: Delivery
+  status: String
+  updatedBy: User
   remarks: String
-  timestamp: String!
+  timestamp: String
 }
 
 # Proof of Delivery
@@ -99,19 +99,19 @@ type ProofOfDelivery {
 
 # Route History
 type RouteHistory {
-  id: String!
-  rider: User!
+  id: String
+  rider: User
   delivery: Delivery
-  latitude: Float!
-  longitude: Float!
-  recordedAt: String!
+  latitude: Float
+  longitude: Float
+  recordedAt: String
 }
 
 # Package
 type Package {
-  id: String!
-  delivery: Delivery!
-  packageType: String!
+  id: String
+  delivery: Delivery
+  packageType: String
   weight: Float
   dimensions: String
   specialInstructions: String
@@ -130,8 +130,8 @@ type Notification {
 }
 
 type Query {
-  getUsers: [User!]!
-  getUser(id: Int!): User
+  getUsers: [User]
+  getUser(id: Int): User
   getDeliveries: [Delivery]
   getDelivery(id:String): Delivery
   getRidersDelivery(id: String): [Delivery]
@@ -209,10 +209,10 @@ type Mutation {
   createDelivery(input: CreateDeliveryInput):Result
   createRider(input: CreateRiderInput): Result
   login(input: LoginInput): Result
-  loginWithGoogle(input: GoogleLoginInput!): Result
-  loginWithFacebook(input: GoogleLoginInput!): Result
+  loginWithGoogle(input: GoogleLoginInput): Result
+  loginWithFacebook(input: GoogleLoginInput): Result
   locationTracking(input: LocationTrackingInput): LocationTrackingData
-  sendNotification(userID: String!, title: String!, message: String!, type: String!): Notification
+  sendNotification(userID: String, title: String, message: String, type: String): Notification
   acceptDelivery(deliveryId: String!, riderId: String!): Result
   finishDelivery(deliveryId: String!, riderId: String!): Result
   cancelDelivery(deliveryId: String!, riderId: String!): Result

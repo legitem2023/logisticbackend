@@ -16,11 +16,22 @@ const LOCATION_TRACKING: any = "";
 const NOTIFICATION_RECEIVED:any = "";
 export const resolvers = {
   Query: {
-    getUsers: async (_: any, args: { id: string }) => {return await prisma.user.findMany()},
-    getUser: async (_: any, args: { id: string }) => { return await prisma.user.findUnique({ where: { id: args.id } })},
-    getDeliveries: async (_: any, args: { id: string }) => { return await prisma.delivery.findMany()},
+    getUsers: async (_: any, args: { id: string }) => {
+      return await prisma.user.findMany()},
+    getUser: async (_: any, args: { id: string }) => { 
+      return await prisma.user.findUnique({ where: { id: args.id } })},
+    getDeliveries: async (_: any, args: { id: string }) => { 
+      return await prisma.delivery.findMany()
+    },
     getDelivery: async (_: any, args: { id: string }) => {
-      return  await prisma.delivery.findUnique({ where:  { id: args.id } })
+      return  await prisma.delivery.findUnique(
+        { 
+          where:  { id: args.id },
+          include: {
+            sender: true,        // include rider info
+            assignedRider:true
+          },
+        })
     },
     getRidersDelivery: async (_: any, args: { id: string }) => {
       const data = await prisma.delivery.findMany({
