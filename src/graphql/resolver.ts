@@ -39,6 +39,7 @@ export const resolvers = {
           assignedRiderId: args.id, // Filter deliveries where this rider is assigned
         },
         include: {
+          sender:true,
           assignedRider: true, // Include full rider info in the response
         },
       });
