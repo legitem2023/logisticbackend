@@ -52,7 +52,9 @@ export const resolvers = {
       return data;
     },
     getRiders: async (_:any,_args:any) => {
-      const data = await prisma.user.findMany({where: {role: 'RIDER'}});
+      const data = await prisma.user.findMany({where: {role: 'RIDER'},include:{
+        vehicleType:true
+      }});
       console.log(data);
       return data;
     },

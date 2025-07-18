@@ -48,7 +48,9 @@ export const resolvers = {
             return data;
         },
         getRiders: async (_, _args) => {
-            const data = await prisma.user.findMany({ where: { role: 'RIDER' } });
+            const data = await prisma.user.findMany({ where: { role: 'RIDER' }, include: {
+                    vehicleType: true
+                } });
             console.log(data);
             return data;
         },
