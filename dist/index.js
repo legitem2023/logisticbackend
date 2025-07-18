@@ -12,6 +12,7 @@ import bodyParser from 'body-parser';
 import compression from 'compression';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 import cookieParser from 'cookie-parser';
+// import { express as voyagerMiddleware } from 'graphql-voyager/middleware';
 import { typeDefs } from './graphql/schema.js';
 import { resolvers } from './graphql/resolver.js';
 dotenv.config();
@@ -83,6 +84,8 @@ async function init() {
     app.use(express.static('json'));
     app.use(express.static('model'));
     app.use(express.static('model/category_images'));
+    app.use('/docs', express.static('docs'));
+    // app.use('/graph-voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
     // ✅ Start server
     await new Promise((resolve) => httpServer.listen(Port, resolve));
     console.log(`🚀 Server ready at ${URL}:${Port}/graphql`);

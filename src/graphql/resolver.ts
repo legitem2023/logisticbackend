@@ -405,12 +405,14 @@ if (!user) {
         },
         include:{
           assignedRider: true,
+          sender:true
         },
       })
       const Rider = updated.assignedRider?.name;
+
       const notification = {
         id: String(Date.now()),
-        user: { id: riderId, name: "Test User" },
+        user: { id: updated.senderId, name: updated.sender.name },
         title: "Delivery Accepted",
         message: `Delivery accepted by ${Rider}`,
         type: "delivery",
@@ -446,12 +448,13 @@ if (!user) {
         },
         include:{
           assignedRider: true,
+          sender:true
         },
       })
       const Rider = updated.assignedRider?.name;
        const notification = {
         id: String(Date.now()),
-        user: { id: riderId, name: Rider },
+        user: { id: updated.senderId, name: updated.sender.name },
         title: "Delivery Finished",
         message: `Delivery Finished by ${Rider}`,
         type: "delivery",
@@ -487,12 +490,14 @@ if (!user) {
         },
         include:{
           assignedRider: true,
+          sender:true
         },
       })
       const Rider = updated.assignedRider?.name;
+
        const notification = {
         id: String(Date.now()),
-        user: { id: riderId, name: Rider },
+        user: { id: updated.senderId, name: updated.sender.name },
         title: "Delivery Cancelled",
         message: `Delivery Cancelled by ${Rider}`,
         type: "delivery",
@@ -509,8 +514,47 @@ if (!user) {
         }
       }
   return updated
+    },
+    createRouteHistory: async (_:any, {deliveryId, riderId,latitude,longitude}:any) =>{
+      try {
+        const updated = await prisma.routeHistory.create({
+          data:{
+            riderId,
+            deliveryId,
+            latitude,
+            longitude,
+            recordedAt:new Date().toISOString()
+          }
+        })
+        if(updated){
+          return {
+            statusText:"Success"
+          }
+        }
+      } catch (error) {
+        
+      }
+    },
+    createPackage: async (_:any, {deliveryId,packageType,weight,dimensions,specialInstructions }:any) => {
+      try {
+        const updated = await prisma.package.create({
+          data:{
+            deliveryId,
+            packageType,
+            weight,
+            dimensions,
+            specialInstructions
+          }
+        })
+        if(updated){
+          return {
+            statusText:"Success"
+          }
+        }
+      } catch (error) {
+        
+      }
     }
-
  },
 Subscription: {
   LocationTracking: {

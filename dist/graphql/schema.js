@@ -101,6 +101,7 @@ type ProofOfDelivery {
 type RouteHistory {
   id: String
   rider: User
+  riderId: String
   delivery: Delivery
   latitude: Float
   longitude: Float
@@ -216,6 +217,8 @@ type Mutation {
   acceptDelivery(deliveryId: String!, riderId: String!): Result
   finishDelivery(deliveryId: String!, riderId: String!): Result
   cancelDelivery(deliveryId: String!, riderId: String!): Result
+  createRouteHistory(deliveryId: String!, riderId: String!,latitude:Float,longitude:Float):Result
+  createPackage(deliveryId: String!,packageType:String,weight:Float,dimensions:String,specialInstructions:String):Result
 }
 
 type Subscription {

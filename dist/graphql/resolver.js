@@ -36,6 +36,7 @@ export const resolvers = {
                     assignedRiderId: args.id, // Filter deliveries where this rider is assigned
                 },
                 include: {
+                    sender: true,
                     assignedRider: true, // Include full rider info in the response
                 },
             });
@@ -349,12 +350,13 @@ export const resolvers = {
                 },
                 include: {
                     assignedRider: true,
+                    sender: true
                 },
             });
             const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
             const notification = {
                 id: String(Date.now()),
-                user: { id: riderId, name: "Test User" },
+                user: { id: updated.senderId, name: updated.sender.name },
                 title: "Delivery Accepted",
                 message: `Delivery accepted by ${Rider}`,
                 type: "delivery",
@@ -389,12 +391,13 @@ export const resolvers = {
                 },
                 include: {
                     assignedRider: true,
+                    sender: true
                 },
             });
             const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
             const notification = {
                 id: String(Date.now()),
-                user: { id: riderId, name: Rider },
+                user: { id: updated.senderId, name: updated.sender.name },
                 title: "Delivery Finished",
                 message: `Delivery Finished by ${Rider}`,
                 type: "delivery",
@@ -429,12 +432,13 @@ export const resolvers = {
                 },
                 include: {
                     assignedRider: true,
+                    sender: true
                 },
             });
             const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
             const notification = {
                 id: String(Date.now()),
-                user: { id: riderId, name: Rider },
+                user: { id: updated.senderId, name: updated.sender.name },
                 title: "Delivery Cancelled",
                 message: `Delivery Cancelled by ${Rider}`,
                 type: "delivery",
@@ -450,6 +454,46 @@ export const resolvers = {
                 };
             }
             return updated;
+        },
+        createRouteHistory: async (_, { deliveryId, riderId, latitude, longitude }) => {
+            try {
+                const updated = await prisma.routeHistory.create({
+                    data: {
+                        riderId,
+                        deliveryId,
+                        latitude,
+                        longitude,
+                        recordedAt: new Date().toISOString()
+                    }
+                });
+                if (updated) {
+                    return {
+                        statusText: "Success"
+                    };
+                }
+            }
+            catch (error) {
+            }
+        },
+        createPackage: async (_, { deliveryId, packageType, weight, dimensions, specialInstructions }) => {
+            try {
+                const updated = await prisma.package.create({
+                    data: {
+                        deliveryId,
+                        packageType,
+                        weight,
+                        dimensions,
+                        specialInstructions
+                    }
+                });
+                if (updated) {
+                    return {
+                        statusText: "Success"
+                    };
+                }
+            }
+            catch (error) {
+            }
         }
     },
     Subscription: {

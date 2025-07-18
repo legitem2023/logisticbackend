@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@2fd/graphdoc": "^2.4.0",
     "@graphql-codegen/typescript": "^4.1.6",
     "@graphql-codegen/typescript-operations": "^4.6.1",
     "@graphql-codegen/typescript-react-apollo": "^4.3.3",
@@ -58,6 +59,7 @@
     "graphql-subscriptions": "^2.0.0",
     "graphql-tag": "^2.12.6",
     "graphql-upload": "^16.0.2",
+    "graphql-voyager": "^2.1.0",
     "graphql-ws": "^5.16.0",
     "jose": "^6.0.11",
     "js-base64": "^3.7.7",
