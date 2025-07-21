@@ -156,7 +156,6 @@ export const resolvers = {
             try {
                 const { name, email, phoneNumber, vehicleTypeId, licensePlate, password // Expect plain text password here
                  } = args.input;
-                console.log("Received input:", args.input);
                 const passwordHash = await encryptPassword(password, 10);
                 const rider = await prisma.user.create({
                     data: {
@@ -165,10 +164,8 @@ export const resolvers = {
                         phoneNumber,
                         licensePlate,
                         passwordHash, // Now correctly named and stored
-                        role: 'RIDER',
-                        vehicleType: {
-                            connect: { id: vehicleTypeId }
-                        },
+                        role: 'Rider',
+                        vehicleTypeId,
                         status: 'AVAILABLE',
                         createdAt: new Date(),
                         updatedAt: new Date()
@@ -177,12 +174,14 @@ export const resolvers = {
                         vehicleType: true
                     }
                 });
-                console.log("Created rider:", rider);
-                return rider;
+                return {
+                    statusText: "success",
+                };
             }
             catch (error) {
-                console.error("Error in createRider:", error); // 🔥 Now you’ll see the real problem
-                throw new Error("Failed to create rider.");
+                return {
+                    statusText: "Error" + error,
+                };
             }
         },
         login: async (_, args) => {
