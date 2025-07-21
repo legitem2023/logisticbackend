@@ -364,6 +364,16 @@ export const resolvers = {
                 isRead: false,
                 createdAt: new Date().toISOString(),
             };
+            await prisma.notification.create({
+                data: {
+                    userId: notification.user.id,
+                    title: notification.title,
+                    message: notification.message,
+                    type: notification.type,
+                    isRead: notification.isRead,
+                    createdAt: new Date(notification.createdAt)
+                }
+            });
             pubsub.publish(NOTIFICATION_RECEIVED, {
                 notificationReceived: notification,
             });
@@ -405,6 +415,16 @@ export const resolvers = {
                 isRead: false,
                 createdAt: new Date().toISOString(),
             };
+            await prisma.notification.create({
+                data: {
+                    userId: notification.user.id,
+                    title: notification.title,
+                    message: notification.message,
+                    type: notification.type,
+                    isRead: notification.isRead,
+                    createdAt: new Date(notification.createdAt)
+                }
+            });
             pubsub.publish(NOTIFICATION_RECEIVED, {
                 notificationReceived: notification,
             });
@@ -446,6 +466,16 @@ export const resolvers = {
                 isRead: false,
                 createdAt: new Date().toISOString(),
             };
+            await prisma.notification.create({
+                data: {
+                    userId: notification.user.id,
+                    title: notification.title,
+                    message: notification.message,
+                    type: notification.type,
+                    isRead: notification.isRead,
+                    createdAt: new Date(notification.createdAt)
+                }
+            });
             pubsub.publish(NOTIFICATION_RECEIVED, {
                 notificationReceived: notification,
             });
