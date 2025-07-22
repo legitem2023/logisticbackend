@@ -19,7 +19,28 @@ export const resolvers = {
             return await prisma.user.findUnique({ where: { id: args.id } });
         },
         getDeliveries: async (_, args) => {
-            return await prisma.delivery.findMany();
+            return await prisma.delivery.findMany({
+                include: {
+                    sender: true, // include rider info
+                    assignedRider: true
+                },
+            });
+        },
+        getDispatch: async (_, args) => {
+            try {
+                const data = await prisma.delivery.findMany({
+                    where: {
+                        senderId: args.id, // Filter deliveries where this rider is assigned
+                    },
+                    include: {
+                        sender: true,
+                        assignedRider: true, // Include full rider info in the response
+                    },
+                });
+                return data;
+            }
+            catch (error) {
+            }
         },
         getDelivery: async (_, args) => {
             return await prisma.delivery.findUnique({

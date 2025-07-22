@@ -138,6 +138,7 @@ type Query {
   getUser(id: Int): User
   getDeliveries: [Delivery]
   getDelivery(id:String): Delivery
+  getDispatch(id:String): [Delivery]
   getRidersDelivery(id: String): [Delivery]
   getVehicleTypes: [VehicleType]
   getRiders: [User]
