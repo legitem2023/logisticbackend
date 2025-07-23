@@ -78,6 +78,8 @@ type Delivery {
   currentLongitude:  Float
   senderId: String
   assignedRiderId: String
+  packageId: String
+  package:Package
 }
 
 # Delivery Status Log
