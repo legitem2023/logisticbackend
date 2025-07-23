@@ -24,7 +24,8 @@ export const resolvers = {
       return await prisma.delivery.findMany({
         include: {
           sender: true,        // include rider info
-          assignedRider:true
+          assignedRider:true,
+          package:true,
         },
       })
     },
@@ -37,6 +38,7 @@ export const resolvers = {
         include: {
           sender:true,
           assignedRider: true, // Include full rider info in the response
+          package:true,
         },
       });
 
@@ -51,7 +53,8 @@ export const resolvers = {
           where:  { id: args.id },
           include: {
             sender: true,        // include rider info
-            assignedRider:true
+            assignedRider:true,
+            package:true,
           },
         })
     },
@@ -63,6 +66,7 @@ export const resolvers = {
         include: {
           sender:true,
           assignedRider: true, // Include full rider info in the response
+          package:true,
         },
       });
 
