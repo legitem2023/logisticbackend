@@ -553,7 +553,6 @@ if (!user) {
         createdAt: new Date().toISOString(),
       };
 
-
       await prisma.notification.create({
         data: {
           userId: notification.user.id,
@@ -602,6 +601,32 @@ if (!user) {
             assignedRiderId: riderId,
           },
         });
+
+      const notification = {
+        id: String(Date.now()),
+        user: { id: riderId },
+        title: "You have been assigned a delivery",
+        message: `You have been assigned a delivery`,
+        type: "delivery",
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      await prisma.notification.create({
+        data: {
+          userId: notification.user.id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          isRead: notification.isRead,
+          createdAt: new Date(notification.createdAt)
+      }});
+
+      pubsub.publish(NOTIFICATION_RECEIVED, {
+        notificationReceived: notification,
+      });
+
+
         if(updated){
           return {
             statusText:"Success"
@@ -629,6 +654,37 @@ if (!user) {
         }
       } catch (error) {
         
+      }
+    },
+    readNotification: async (_:any, { notificationId }:any) => {
+      try {
+        const updated = await prisma.notification.update({
+          where: { id: notificationId },
+          data: {
+            isRead: true,
+          },
+        });
+        if(updated){
+          return {
+            statusText:"Success"
+          }
+        }
+      } catch (error) {
+       console.log(error); 
+      }
+    },
+    deleteNotification: async (_:any, { notificationId }:any) => {
+      try {
+        const updated = await prisma.notification.delete({
+          where: { id: notificationId },
+        });
+        if(updated){
+          return {
+            statusText:"Success"
+          }
+        }
+      } catch (error) {
+       console.log(error); 
       }
     }
  },

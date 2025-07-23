@@ -78,7 +78,7 @@ type Delivery {
   senderId: String
   assignedRiderId: String
   packageId: String
-  packages:Package
+  packages:[Package]
 }
 
 # Delivery Status Log
@@ -225,6 +225,8 @@ type Mutation {
   cancelDelivery(deliveryId: String!, riderId: String!): Result
   createRouteHistory(deliveryId: String!, riderId: String!,latitude:Float,longitude:Float):Result
   createPackage(deliveryId: String!,packageType:String,weight:Float,dimensions:String,specialInstructions:String):Result
+  readNotification(notificationId: String!): Result
+  deleteNotification(notificationId: String!): Result
 }
 
 type Subscription {
