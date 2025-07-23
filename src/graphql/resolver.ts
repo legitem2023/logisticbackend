@@ -25,7 +25,7 @@ export const resolvers = {
         include: {
           sender: true,        // include rider info
           assignedRider:true,
-          package:true,
+          packages:true,
         },
       })
     },
@@ -38,7 +38,7 @@ export const resolvers = {
         include: {
           sender:true,
           assignedRider: true, // Include full rider info in the response
-          package:true,
+          packages:true,
         },
       });
 
@@ -54,7 +54,7 @@ export const resolvers = {
           include: {
             sender: true,        // include rider info
             assignedRider:true,
-            package:true,
+            packages:true,
           },
         })
     },
@@ -66,7 +66,7 @@ export const resolvers = {
         include: {
           sender:true,
           assignedRider: true, // Include full rider info in the response
-          package:true,
+          packages:true,
         },
       });
 
