@@ -66,7 +66,6 @@ type Delivery {
   actualDeliveryTime: String
   createdAt: String
   updatedAt: String
-
   deliveryType:String
   paymentStatus:   String
   paymentMethod:  String

@@ -63,7 +63,6 @@ type Delivery {
   actualDeliveryTime: String
   createdAt: String
   updatedAt: String
-
   deliveryType:String
   paymentStatus:   String
   paymentMethod:  String
@@ -75,6 +74,8 @@ type Delivery {
   currentLongitude:  Float
   senderId: String
   assignedRiderId: String
+  packageId: String
+  packages:Package
 }
 
 # Delivery Status Log
