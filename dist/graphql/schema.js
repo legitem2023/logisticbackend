@@ -209,6 +209,7 @@ input LocationTrackingInput {
 
 
 type Mutation {
+  assignRider(deliveryId: String!, riderId: String!): Result
   createDelivery(input: CreateDeliveryInput):Result
   createRider(input: CreateRiderInput): Result
   login(input: LoginInput): Result

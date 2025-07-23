@@ -531,6 +531,23 @@ export const resolvers = {
             catch (error) {
             }
         },
+        assignRider: async (_, { deliveryId, riderId }) => {
+            try {
+                const updated = await prisma.delivery.update({
+                    where: { id: deliveryId },
+                    data: {
+                        assignedRiderId: riderId,
+                    },
+                });
+                if (updated) {
+                    return {
+                        statusText: "Success"
+                    };
+                }
+            }
+            catch (error) {
+            }
+        },
         createPackage: async (_, { deliveryId, packageType, weight, dimensions, specialInstructions }) => {
             try {
                 const updated = await prisma.package.create({

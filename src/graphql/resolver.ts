@@ -594,6 +594,23 @@ if (!user) {
         
       }
     },
+    assignRider: async (_:any, { deliveryId, riderId }:any) => {
+      try {
+        const updated = await prisma.delivery.update({
+          where: { id: deliveryId },
+          data: {
+            assignedRiderId: riderId,
+          },
+        });
+        if(updated){
+          return {
+            statusText:"Success"
+          }
+        }
+      } catch (error) {
+        
+      }
+    },
     createPackage: async (_:any, {deliveryId,packageType,weight,dimensions,specialInstructions }:any) => {
       try {
         const updated = await prisma.package.create({
