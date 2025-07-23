@@ -79,7 +79,7 @@ type Delivery {
   senderId: String
   assignedRiderId: String
   packageId: String
-  package:Package
+  packages:Package
 }
 
 # Delivery Status Log
