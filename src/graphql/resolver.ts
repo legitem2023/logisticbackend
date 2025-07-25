@@ -119,7 +119,10 @@ export const resolvers = {
           deliveryType,
           paymentStatus,
           paymentMethod,
-          deliveryFee
+          deliveryFee,
+          baseRate,
+          perKmRate,
+          distance
         } = args.input;
     
         // ✅ 1. Validate sender exists
@@ -184,7 +187,10 @@ export const resolvers = {
             deliveryType,
             paymentStatus,
             paymentMethod,
-            deliveryFee
+            deliveryFee,
+            baseRate,
+            perKmRate,
+            distance
           },
           include: {
             sender: true,
