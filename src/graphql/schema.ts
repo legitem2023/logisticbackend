@@ -14,6 +14,8 @@ type VehicleType {
   updatedAt: String
   icon: String
   cost: Float
+  perKmRate: Float
+  rushTimeAddon: Float
 }
 
 # User / Rider

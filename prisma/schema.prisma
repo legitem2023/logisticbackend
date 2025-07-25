@@ -43,6 +43,8 @@ model VehicleType {
   updatedAt     DateTime @updatedAt
   icon          String?
   cost          Float?
+  perKmRate     Float?
+  rushTimeAdd   Float?
   users         User[]
 }
 

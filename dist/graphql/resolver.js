@@ -100,7 +100,7 @@ export const resolvers = {
         createDelivery: async (_, args) => {
             try {
                 const { senderId, recipientName, recipientPhone, pickupAddress, pickupLatitude, pickupLongitude, dropoffAddress, dropoffLatitude, dropoffLongitude, assignedRiderId, estimatedDeliveryTime, // this is a string
-                deliveryType, paymentStatus, paymentMethod, deliveryFee } = args.input;
+                deliveryType, paymentStatus, paymentMethod, deliveryFee, baseRate, perKmRate, distance } = args.input;
                 // ✅ 1. Validate sender exists
                 const sender = await prisma.user.findUnique({
                     where: { id: senderId }
@@ -157,7 +157,10 @@ export const resolvers = {
                         deliveryType,
                         paymentStatus,
                         paymentMethod,
-                        deliveryFee
+                        deliveryFee,
+                        baseRate,
+                        perKmRate,
+                        distance
                     },
                     include: {
                         sender: true,
