@@ -79,6 +79,9 @@ type Delivery {
   assignedRiderId: String
   packageId: String
   packages:[Package]
+  baseRate: Float
+  perKmRate: Float
+  distance: Float
 }
 
 # Delivery Status Log
@@ -167,7 +170,9 @@ input CreateDeliveryInput {
   paymentStatus: String
   paymentMethod: String
   deliveryFee: Float
-
+  baseRate: Float
+  perKmRate: Float
+  distance: Float
 }
 input CreateRiderInput {
   name: String
