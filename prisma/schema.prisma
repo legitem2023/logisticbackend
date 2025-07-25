@@ -88,7 +88,9 @@ model Delivery {
   failedAttemptReason  String?
   currentLatitude      Float?
   currentLongitude     Float?
-
+  baseRate             Float?
+  perKmRate            Float?
+  distance             Float?
   statusLogs           DeliveryStatusLog[]
   proofOfDelivery      ProofOfDelivery?
   packages             Package[]
