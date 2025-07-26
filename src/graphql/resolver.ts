@@ -203,7 +203,30 @@ export const resolvers = {
             assignedRider: true
           }
         });
-    
+
+      const notification = {
+        id: String(Date.now()),
+        user: { id: "686ffdf59a1ad0a2e9c79f0b"},
+        title: "New Delivery Created",
+        message: `Assign a Rider to this delivery`,
+        type: "delivery",
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      };
+
+        await prisma.notification.create({
+          data: {
+            userId: "686ffdf59a1ad0a2e9c79f0b",
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            isRead: notification.isRead,
+            createdAt: new Date(notification.createdAt)
+        }});
+        pubsub.publish(NOTIFICATION_RECEIVED, {
+          notificationReceived: notification,
+        });
+
         return {
           statusText: "success",
           delivery
@@ -510,7 +533,6 @@ if (!user) {
         isRead: false,
         createdAt: new Date().toISOString(),
       };
-
 
       await prisma.notification.create({
         data: {
