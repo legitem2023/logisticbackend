@@ -64,6 +64,9 @@ export const resolvers = {
                     assignedRider: true, // Include full rider info in the response
                     packages: true,
                 },
+                orderBy: {
+                    createdAt: 'desc',
+                },
             });
             return data;
         },
