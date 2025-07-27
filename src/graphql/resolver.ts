@@ -418,13 +418,30 @@ if (!user) {
     };
     },
     locationTracking: async (_: any, args: any) => {
-    try {
-      pubsub.publish(LOCATION_TRACKING, { LocationTracking: args.input });
-      return args.input;
-     } catch (error) {
-      console.log(error);
-    }
-    },
+     try {
+       
+    const { userID, latitude, longitude } = args.input;
+
+    await prisma.user.update({
+      where: { id: userID },
+      data: {
+        currentLatitude: latitude,
+        currentLongitude: longitude,
+        lastUpdatedAt: new Date(),
+      },
+    });
+
+    pubsub.publish('LOCATION_TRACKING', { LocationTracking: args.input });
+
+    return args.input;
+  } catch (error) {
+    console.log('Error updating location:', error);
+    throw new Error('Failed to update location');
+  }
+},
+
+
+    
     sendNotification: async(_:any, { userID, title, message, type }:any) => {
       const notification = {
         id: String(Date.now()),
