@@ -52,3 +52,26 @@ export async function generateTrackingNumber(): Promise<string> {
 
   return `TRK-${dateStr}-${paddedCounter}`;
 }
+
+// calculateDistanceInKm.ts
+
+export function calculateDistanceInKm(
+  picklat: number,
+  picklon: number,
+  riderlat: number,
+  riderlon: number
+): number {
+  const toRad = (value: number) => (value * Math.PI) / 180;
+
+  const R = 6371; // Earth radius in kilometers
+  const dLat = toRad(riderlat - picklat);
+  const dLon = toRad(riderlon - picklon);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(picklat)) * Math.cos(toRad(riderlat)) * Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
