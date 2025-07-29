@@ -1,5 +1,5 @@
 import { PrismaClient, User, VehicleType, Delivery } from '@prisma/client';
-import { calculateHaversineDistance } from './geoUtils';
+import { calculateHaversineDistance } from './geoUtils.js';
 
 const prisma = new PrismaClient();
 
