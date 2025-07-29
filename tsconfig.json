@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
+    "module": "commonjs",
     "target": "es2017",
     "outDir": "dist",
     "rootDir": "src",              // ✅ THIS FIXES YOUR STRUCTURE
