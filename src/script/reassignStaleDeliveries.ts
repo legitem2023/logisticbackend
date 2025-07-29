@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+/*import { PrismaClient } from '@prisma/client';
 import { autoAssignRider } from './riderAssignment.js';
 
 const prisma = new PrismaClient();
@@ -68,4 +68,4 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
       console.error(`Failed to reassign delivery ${delivery.id}:`, error);
     }
   }
-};
+};*/
