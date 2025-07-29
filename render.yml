@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: logistic-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        required: true
+      - key: JWT_SECRET
+        required: true
+      - key: NODE_ENV
+        value: production
