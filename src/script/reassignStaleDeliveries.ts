@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { autoAssignRider } from './riderAssignment.js';
+import { autoAssignRider } from './riderAssignment';
 
 const prisma = new PrismaClient();
 
