@@ -9,7 +9,7 @@ interface ScoredRider extends User {
   currentDeliveries: number;
   vehicleType?: VehicleType | null; // Add if needed
 }
-export const autoAssignRider = async (deliveryId: string) {
+export const autoAssignRider = async (deliveryId: string) => {
   // 1. Get the delivery with pickup location
   const delivery = await prisma.delivery.findUnique({
     where: { id: deliveryId },
