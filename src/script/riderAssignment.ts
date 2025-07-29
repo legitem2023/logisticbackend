@@ -164,7 +164,7 @@ console.log(totalWeight,totalVolume,"<-");
   // 3. Find eligible active riders
   const eligibleRiders = await prisma.user.findMany({
     where: {
-      role: 'RIDER',
+      role: 'Rider',
       status: 'active',
       currentLatitude: { not: null },
       currentLongitude: { not: null },
