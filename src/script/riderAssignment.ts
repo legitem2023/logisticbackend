@@ -49,15 +49,11 @@ export const autoAssignRider = async (deliveryId: string) => {
 
   // 4. Score and filter riders by proximity and capacity
   const scoredRiders: ScoredRider[] = [];
- let temporal;
- let curdel;
- let vehic;
   for (const rider of eligibleRiders) {
     const distance = calculateHaversineDistance(
       [rider.currentLatitude!, rider.currentLongitude!],
       [delivery.pickupLatitude, delivery.pickupLongitude]
     );
-    temporal = distance;
     if (distance > 15) continue;
   // console.log(distance,'distance');
     const currentDeliveries = await prisma.delivery.count({
@@ -66,7 +62,6 @@ export const autoAssignRider = async (deliveryId: string) => {
         deliveryStatus: { in: ['assigned', 'picked_up'] }
       }
     });
-    curdel = currentDeliveries;
  // console.log(currentDeliveries,'curdle');
     // Fetch vehicleType manually since Prisma MongoDB doesn't support include
     const vehicleType = rider.vehicleTypeId
@@ -74,7 +69,7 @@ export const autoAssignRider = async (deliveryId: string) => {
           where: { id: rider.vehicleTypeId }
         })
       : null;
-   vehic = vehicleType;
+   
     const canCarry = vehicleType
       ? (totalWeight <= (vehicleType.maxCapacityKg || Infinity)) &&
         (totalVolume <= (vehicleType.maxVolumeM3 || Infinity))
@@ -99,9 +94,6 @@ export const autoAssignRider = async (deliveryId: string) => {
   const bestRider = scoredRiders
     .filter(r => r.canCarry)
     .sort((a, b) => a.score - b.score)[0];
-console.log(temporal,'temppral');
-  console.log(curdel,'curdel');
-  console.log(vehic,'vehic');
   //console.log(temporal,'bestrider');
   
   if (!bestRider) {
