@@ -40,6 +40,9 @@ export const autoAssignRider = async (deliveryId: string) => {
       lastUpdatedAt: { 
         gte: new Date(Date.now() - 5 * 60 * 1000) // Active in last 5 mins
       },
+      include:{
+        vehicleType:true
+      }
       // Additional proximity filter will be applied in code
     }
   });
