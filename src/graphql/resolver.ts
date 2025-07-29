@@ -3,7 +3,7 @@ import { comparePassword, encryptPassword, generateTrackingNumber } from '../scr
 import { autoAssignRider } from '../script/riderAssignment';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
-import { PubSub, withFilter } from "graphql-subscriptions";
+import { PubSub, withFilter } from "graphql-subscriptions/index.js";
 
 
 const prisma = new PrismaClient()
