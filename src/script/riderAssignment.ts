@@ -153,14 +153,14 @@ export const autoAssignRider = async (deliveryId: string) => {
 
   if (!delivery) throw new Error('Delivery not found');
   if (delivery.assignedRiderId) throw new Error('Delivery already assigned');
-
+  console.log(delivery,"<-");
   // 2. Calculate total package weight/volume
   const totalWeight = delivery.packages.reduce((sum, pkg) => sum + (pkg.weight || 0), 0);
   const totalVolume = delivery.packages.reduce((sum, pkg) => {
     const [l, w, h] = pkg.dimensions?.split('x').map(Number) || [0, 0, 0];
     return sum + (l * w * h);
   }, 0);
-
+console.log(totalWeight,totalVolume,"<-");
   // 3. Find eligible active riders
   const eligibleRiders = await prisma.user.findMany({
     where: {
@@ -177,7 +177,7 @@ export const autoAssignRider = async (deliveryId: string) => {
       vehicleType: true
     }
   });
-
+  console.log(eligibleRiders,"<-");
   if (eligibleRiders.length === 0) {
     throw new Error('No active riders available');
   }
@@ -192,7 +192,7 @@ export const autoAssignRider = async (deliveryId: string) => {
       [rider.currentLatitude, rider.currentLongitude],
       [delivery.pickupLatitude, delivery.pickupLongitude]
     );
-
+    console.log(distance);
     // Skip if beyond 15km radius
     if (distance > 15) continue; // 15km
 
@@ -202,7 +202,7 @@ export const autoAssignRider = async (deliveryId: string) => {
         deliveryStatus: { in: ['assigned', 'picked_up'] }
       }
     });
-
+   
     const canCarry = rider.vehicleType 
       ? (totalWeight <= (rider.vehicleType.maxCapacityKg || Infinity)) && 
         (totalVolume <= (rider.vehicleType.maxVolumeM3 || Infinity))
@@ -231,7 +231,7 @@ export const autoAssignRider = async (deliveryId: string) => {
   if (!bestRider) {
     throw new Error('No suitable rider found within range');
   }
-
+console.log(bestRider,"<-curdel");
   // 6. Assign rider and create status log
   return await prisma.$transaction([
     prisma.delivery.update({
