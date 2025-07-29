@@ -4,9 +4,11 @@ import { calculateHaversineDistance } from './geoUtils.js';
 const prisma = new PrismaClient();
 
 interface ScoredRider extends User {
-  score: number; // Lower score = better match
+  score: number;
+  canCarry: boolean; // Ensure this matches your usage
+  currentDeliveries: number;
+  vehicleType?: VehicleType | null; // Add if needed
 }
-
 export async function autoAssignRider(deliveryId: string) {
   // 1. Get the delivery with pickup location
   const delivery = await prisma.delivery.findUnique({
