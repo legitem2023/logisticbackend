@@ -34,7 +34,7 @@ export const autoAssignRider = async (deliveryId: string) => {
   const eligibleRiders = await prisma.user.findMany({
     where: {
       role: 'RIDER',
-      status: 'active',
+      status: 'AVAILABLE',
       currentLatitude: { not: null },
       currentLongitude: { not: null },
       lastUpdatedAt: { 
