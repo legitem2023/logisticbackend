@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "nodenext",
+    "moduleResolution": "node",
     "outDir": "dist",
     "rootDir": "src",              // ✅ THIS FIXES YOUR STRUCTURE
     "esModuleInterop": true,
