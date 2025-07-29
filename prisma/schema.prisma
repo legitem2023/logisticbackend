@@ -31,7 +31,7 @@ model User {
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
-  ratings Float?  @default(4.0)
+  rating Float?  @default(4.0)
 }
 
 model VehicleType {
