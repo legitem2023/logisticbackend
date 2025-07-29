@@ -1,4 +1,4 @@
-import { PrismaClient, User, VehicleType, Delivery } from '@prisma/client';
+/*import { PrismaClient, User, VehicleType, Delivery } from '@prisma/client';
 import { calculateHaversineDistance } from './geoUtils.js';
 
 const prisma = new PrismaClient();
@@ -128,3 +128,4 @@ export const autoAssignRider = async (deliveryId: string) => {
     })
   ]);
 }
+*/
