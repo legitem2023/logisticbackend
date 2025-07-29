@@ -29,7 +29,7 @@ export const autoAssignRider = async (deliveryId: string) => {
   // 3. Find eligible riders within 15km radius (MongoDB geospatial query)
   const eligibleRiders = await prisma.user.findRaw({
     filter: {
-      role: 'rider',
+      role: 'Rider',
       status: 'active',
       currentLatitude: { $exists: true },
       currentLongitude: { $exists: true },
