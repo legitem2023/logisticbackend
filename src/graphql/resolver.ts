@@ -224,7 +224,7 @@ export const resolvers = {
             isRead: notification.isRead,
             createdAt: new Date(notification.createdAt)
         }});
-    //   await autoAssignRider(delivery.id);
+      await autoAssignRider(delivery.id);
         pubsub.publish(NOTIFICATION_RECEIVED, {
           notificationReceived: notification,
         });
