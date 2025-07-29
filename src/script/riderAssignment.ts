@@ -1,4 +1,4 @@
-import { PrismaClient, User, VehicleType, Delivery } from '@prisma/client';
+import { PrismaClient, User, VehicleType } from '@prisma/client';
 import { calculateHaversineDistance } from './geoUtils.js';
 
 const prisma = new PrismaClient();
@@ -22,7 +22,7 @@ export const autoAssignRider = async (deliveryId: string) => {
 
   if (!delivery) throw new Error('Delivery not found');
   if (delivery.assignedRiderId) throw new Error('Delivery already assigned');
-  
+
   // 2. Calculate total package weight/volume
   const totalWeight = delivery.packages.reduce((sum, pkg) => sum + (pkg.weight || 0), 0);
   const totalVolume = delivery.packages.reduce((sum, pkg) => {
@@ -30,37 +30,33 @@ export const autoAssignRider = async (deliveryId: string) => {
     return sum + (l * w * h);
   }, 0);
 
-  // 3. Find eligible active riders
+  // 3. Find eligible active riders (without include)
   const eligibleRiders = await prisma.user.findMany({
-  where: {
-    role: 'RIDER',
-    status: 'AVAILABLE',
-    lastUpdatedAt: { 
-      gte: new Date(Date.now() - 5 * 60 * 1000) // Active in last 5 mins
+    where: {
+      role: 'RIDER',
+      status: 'AVAILABLE',
+      lastUpdatedAt: { 
+        gte: new Date(Date.now() - 5 * 60 * 1000)
+      },
+      currentLatitude: { not: null },
+      currentLongitude: { not: null },
     }
-  },
-  include: {
-    vehicleType: true // this must be outside 'where'
-  }
-});
-  console.log(eligibleRiders,"<-");
+  });
+
   if (eligibleRiders.length === 0) {
     throw new Error('No active riders available');
   }
 
-  // 4. Score and filter riders by proximity (15km radius) and capacity
+  // 4. Score and filter riders by proximity and capacity
   const scoredRiders: ScoredRider[] = [];
-  
-  for (const rider of eligibleRiders) {
-    if (!rider.currentLatitude || !rider.currentLongitude) continue;
 
+  for (const rider of eligibleRiders) {
     const distance = calculateHaversineDistance(
-      [rider.currentLatitude, rider.currentLongitude],
+      [rider.currentLatitude!, rider.currentLongitude!],
       [delivery.pickupLatitude, delivery.pickupLongitude]
     );
-    console.log(distance);
-    // Skip if beyond 15km radius
-    if (distance > 15) continue; // 15km
+
+    if (distance > 15) continue;
 
     const currentDeliveries = await prisma.delivery.count({
       where: { 
@@ -68,24 +64,31 @@ export const autoAssignRider = async (deliveryId: string) => {
         deliveryStatus: { in: ['assigned', 'picked_up'] }
       }
     });
-   
-    const canCarry = rider.vehicleType 
-      ? (totalWeight <= (rider.vehicleType.maxCapacityKg || Infinity)) && 
-        (totalVolume <= (rider.vehicleType.maxVolumeM3 || Infinity))
+
+    // Fetch vehicleType manually since Prisma MongoDB doesn't support include
+    const vehicleType = rider.vehicleTypeId
+      ? await prisma.vehicleType.findUnique({
+          where: { id: rider.vehicleTypeId }
+        })
+      : null;
+
+    const canCarry = vehicleType
+      ? (totalWeight <= (vehicleType.maxCapacityKg || Infinity)) &&
+        (totalVolume <= (vehicleType.maxVolumeM3 || Infinity))
       : false;
 
-    const score = 
-      distance * 0.6 + // Distance (60% weight)
-      currentDeliveries * 200 + // Load penalty
-      (rider.vehicleType?.perKmRate || 10) * 0.2 + // Cost factor
-      (5 - (rider.rating || 3.5)) * 100; // Rating bonus
+    const score =
+      distance * 0.6 +
+      currentDeliveries * 200 +
+      (vehicleType?.perKmRate || 10) * 0.2 +
+      (5 - (rider.rating || 3.5)) * 100;
 
     scoredRiders.push({
       ...rider,
       score,
       canCarry,
       currentDeliveries,
-      vehicleType: rider.vehicleType
+      vehicleType,
     });
   }
 
@@ -97,8 +100,8 @@ export const autoAssignRider = async (deliveryId: string) => {
   if (!bestRider) {
     throw new Error('No suitable rider found within range');
   }
-console.log(bestRider,"<-curdel");
-  // 6. Assign rider and create status log
+
+  // 6. Assign rider and log status
   return await prisma.$transaction([
     prisma.delivery.update({
       where: { id: deliveryId },
