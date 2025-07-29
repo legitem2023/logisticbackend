@@ -8,8 +8,7 @@
     "postinstall": "npx prisma generate && npx prisma db push && tsc",
     "build": "npx prisma generate && tsc && cpx \"docs/**/*\" dist/docs",
     "start": "nodemon ./dist/index.js",
-    "dev": "tsc-watch --onSuccess \"nodemon ./dist/index.js\"",
-    "codegen": "graphql-codegen"
+
   }
   "keywords": [],
   "author": "",
