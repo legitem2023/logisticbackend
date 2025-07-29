@@ -229,6 +229,19 @@ export const resolvers = {
           notificationReceived: notification,
         });
 
+  // 2c. Log the reassignment
+      await prisma.deliveryStatusLog.create({
+        data: {
+          deliveryId: delivery.id,
+          status: 'reassigned',
+          updatedById: assignedRiderId,
+          remarks: `Auto-reassigned from ${delivery.assignedRider?.name}`
+        }
+      });
+
+
+
+        
         return {
           statusText: "success",
           delivery
