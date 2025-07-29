@@ -9,10 +9,7 @@
     "build": "npx prisma generate && tsc && cpx \"docs/**/*\" dist/docs",
     "start": "nodemon ./dist/index.js",
     "dev": "tsc-watch --onSuccess \"nodemon ./dist/index.js\"",
-    "codegen": "graphql-codegen",
-    "prisma:generate": "npx prisma generate",
-    "prisma:push": "npx prisma db push",
-    "prisma:studio": "npx prisma studio"
+    "codegen": "graphql-codegen"
   }
   "keywords": [],
   "author": "",
