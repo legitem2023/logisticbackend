@@ -96,7 +96,7 @@ export const autoAssignRider = async (deliveryId: string) => {
   const bestRider = scoredRiders
     .filter(r => r.canCarry)
     .sort((a, b) => a.score - b.score)[0];
-console.log(bestRider,'brider'),
+console.log(bestRider,'brider');
   if (!bestRider) {
     throw new Error('No suitable rider found within range');
   }
