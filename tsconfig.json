@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "target": "ES2022",
+    "module": "nodenext",
+    "target": "es2017",
     "outDir": "dist",
     "rootDir": "src",              // ✅ THIS FIXES YOUR STRUCTURE
     "esModuleInterop": true,
