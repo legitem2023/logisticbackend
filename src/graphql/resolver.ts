@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script';
+import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
 import { autoAssignRider } from '../script/riderAssignment';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
