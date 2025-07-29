@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
-import { autoAssignRider } from '../script/riderAssignment';
+import { autoAssignRider } from '../script/riderAssignment.js';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
 import { PubSub, withFilter } from "graphql-subscriptions";
