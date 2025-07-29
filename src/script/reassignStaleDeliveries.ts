@@ -3,7 +3,7 @@ import { autoAssignRider } from './riderAssignment';
 
 const prisma = new PrismaClient();
 
-export async function reassignStaleDeliveries() {
+export const reassignStaleDeliveries = async () => {
   const staleThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
 
   // 1. Find stale assigned deliveries
