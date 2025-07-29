@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "module": "nodenext",
-    "moduleResolution": "node",
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "dist",
     "rootDir": "src",              // ✅ THIS FIXES YOUR STRUCTURE
     "esModuleInterop": true,
