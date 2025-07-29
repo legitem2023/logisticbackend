@@ -143,7 +143,7 @@ export const resolvers = {
             message: `Sender with ID ${senderId} not found.`
           };
         }
-    
+     
         // ✅ 2. Validate assigned rider if provided
         let riderExists = null;
         if (assignedRiderId) {
