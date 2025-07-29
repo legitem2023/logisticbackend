@@ -81,14 +81,12 @@ export const resolvers = {
     },
     getVehicleTypes: async (_:any,_args:any) => {
       const data = await prisma.vehicleType.findMany();
-      console.log(data);
       return data;
     },
     getRiders: async (_:any,_args:any) => {
       const data = await prisma.user.findMany({where: {role: 'RIDER'},include:{
         vehicleType:true
       }});
-      console.log(data);
       return data;
     },
     getNotifications: async (_:any, args: { id: string }) => { 
