@@ -41,9 +41,6 @@ export const autoAssignRider = async (deliveryId: string) => {
         gte: new Date(Date.now() - 5 * 60 * 1000) // Active in last 5 mins
       },
       // Additional proximity filter will be applied in code
-    },
-    include: {
-      vehicleType: true
     }
   });
   console.log(eligibleRiders,"<-");
