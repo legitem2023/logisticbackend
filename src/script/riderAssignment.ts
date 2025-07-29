@@ -57,14 +57,14 @@ export const autoAssignRider = async (deliveryId: string) => {
     );
 
     if (distance > 15) continue;
-   console.log(distance,'distance');
+  // console.log(distance,'distance');
     const currentDeliveries = await prisma.delivery.count({
       where: { 
         assignedRiderId: rider.id,
         deliveryStatus: { in: ['assigned', 'picked_up'] }
       }
     });
-  console.log(currentDeliveries,'curdle');
+ // console.log(currentDeliveries,'curdle');
     // Fetch vehicleType manually since Prisma MongoDB doesn't support include
     const vehicleType = rider.vehicleTypeId
       ? await prisma.vehicleType.findUnique({
@@ -96,11 +96,11 @@ export const autoAssignRider = async (deliveryId: string) => {
   const bestRider = scoredRiders
     .filter(r => r.canCarry)
     .sort((a, b) => a.score - b.score)[0];
-console.log(bestRider,'brider');
+console.log(scoredRiders,'bestrider');
   if (!bestRider) {
     throw new Error('No suitable rider found within range');
   }
-console.log(deliveryId,'delId');
+//console.log(deliveryId,'delId');
   // 6. Assign rider and log status
   return await prisma.$transaction([
     prisma.delivery.update({
