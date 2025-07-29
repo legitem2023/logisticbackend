@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
-import { autoAssignRider } from '../script/riderAssignment';
+//import { autoAssignRider } from '../script/riderAssignment';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
 import { PubSub, withFilter } from "graphql-subscriptions";
@@ -224,7 +224,7 @@ export const resolvers = {
             isRead: notification.isRead,
             createdAt: new Date(notification.createdAt)
         }});
-       await autoAssignRider(delivery.id);
+    //   await autoAssignRider(delivery.id);
         pubsub.publish(NOTIFICATION_RECEIVED, {
           notificationReceived: notification,
         });
