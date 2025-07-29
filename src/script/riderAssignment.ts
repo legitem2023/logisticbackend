@@ -42,7 +42,7 @@ export const autoAssignRider = async (deliveryId: string) => {
       currentLongitude: { not: null },
     }
   });
-
+console.log(eligibleRiders,'<-legit-');
   if (eligibleRiders.length === 0) {
     throw new Error('No active riders available');
   }
