@@ -223,7 +223,7 @@ export const resolvers = {
             isRead: notification.isRead,
             createdAt: new Date(notification.createdAt)
         }});
-      await autoAssignRider(delivery.id);
+      
         pubsub.publish(NOTIFICATION_RECEIVED, {
           notificationReceived: notification,
         });
@@ -711,14 +711,35 @@ if (!user) {
             dimensions,
             specialInstructions
           }
-        })
+        })  
+        const result = await autoAssignRider(deliveryId);
+        if(result) {      
+           return {
+            statusText:"Success"
+          }
+        } else {
+          await prisma.delivery.update(+{
+             data:{
+              status: "unassigned",
+              updatedById: updated.senderId,
+              timestamp: new Date(),
+              remarks: "Rider Assignment failed!", 
+             },
+             where:{
+               id:deliveryId
+             }
+           })
+          return {
+            statusText:"Success"
+          }
+        }
         if(updated){
           return {
             statusText:"Success"
           }
         }
       } catch (error) {
-        
+        console.log(error);
       }
     },
     readNotification: async (_:any, { notificationId }:any) => {
