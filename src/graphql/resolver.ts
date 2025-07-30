@@ -712,7 +712,7 @@ if (!user) {
             specialInstructions
           }
         })  
-        const result = await autoAssignRider(deliveryId);
+       /* const result = await autoAssignRider(deliveryId);
         if(result) {      
            return {
             statusText:"Success"
@@ -730,7 +730,7 @@ if (!user) {
           return {
             statusText:"Success"
           }
-        }
+        }*/
         if(updated){
           return {
             statusText:"Success"
