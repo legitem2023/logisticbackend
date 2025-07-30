@@ -96,7 +96,7 @@ async function init() {
   app.get('/playground', playground.default({ endpoint: '/graphql' }));
 
 
-Add this before starting your Apollo Server
+//Add this before starting your Apollo Server
 const reassignmentJob = new CronJob(
   '*/5 * * * *', // Every 5 minutes
   async () => {
