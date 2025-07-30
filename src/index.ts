@@ -14,9 +14,10 @@ import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.mjs';
 import cookieParser from 'cookie-parser';
 import playground from 'graphql-playground-middleware-express';
 
-
 import { typeDefs } from './graphql/schema.js';
 import { resolvers } from './graphql/resolver.js';
+import { CronJob } from 'cron';
+import { reassignStaleDeliveries } from './script/reassignStaleDeliveries.js';
 
 dotenv.config();
 
@@ -94,6 +95,22 @@ async function init() {
   app.use(cookieParser());
   app.get('/playground', playground.default({ endpoint: '/graphql' }));
 
+
+Add this before starting your Apollo Server
+const reassignmentJob = new CronJob(
+  '*/5 * * * *', // Every 5 minutes
+  async () => {
+    console.log('Running stale delivery reassignment...');
+    await reassignStaleDeliveries();
+  },
+  null, // onComplete
+  true, // start immediately
+  'UTC' // timezone
+);
+
+
+
+  
   // ✅ Apollo middleware (🔧 TS-safe fix here)
   app.use(
     '/graphql',
