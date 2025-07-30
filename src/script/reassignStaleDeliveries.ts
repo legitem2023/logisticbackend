@@ -18,25 +18,32 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
   const staleThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
 
   const staleDeliveries = await prisma.delivery.findMany({
-    where: {
-      OR: [
-        {
-          deliveryStatus: 'assigned',
-          updatedAt: { lt: staleThreshold },
-          assignedRiderId: { not: null },
-        },
-        {
-          deliveryStatus: 'unassigned', // or whatever status indicates unassigned
-          createdAt: { lt: staleThreshold },
-          assignedRiderId: null,
-        }
-      ]
+  where: {
+    OR: [
+      {
+        deliveryStatus: 'assigned',
+        updatedAt: { lt: staleThreshold },
+        assignedRiderId: { not: null },
+      },
+      {
+        deliveryStatus: 'unassigned',
+        createdAt: { lt: staleThreshold },
+        assignedRiderId: null,
+      }
+    ]
+  },
+  include: {
+    assignedRider: true,
+    packages: {
+      // Be explicit about what package fields you need
+      select: {
+        id: true,
+        packageType: true,
+        // Add other needed fields
+      }
     },
-    include: {
-      assignedRider: true,
-      packages: true,
-    },
-  });
+  },
+});
 
   for (const delivery of staleDeliveries) {
     try {
