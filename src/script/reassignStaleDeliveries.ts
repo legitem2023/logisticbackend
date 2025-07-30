@@ -84,8 +84,8 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
           status: delivery.assignedRiderId ? 'reassigned' : 'assigned',
           updatedById: updatedDelivery.assignedRiderId!,
           remarks: delivery.assignedRiderId 
-            ? `Auto-reassigned from ${delivery.assignedRider?.name ?? 'unknown'} to ${newRider.name}`
-            : `Auto-assigned to ${newRider.name}`,
+            ? `Auto-reassigned from ${delivery.assignedRider?.name ?? 'unknown'} to ${updatedDelivery.assignedRider?.name}`
+            : `Auto-assigned to ${updatedDelivery.assignedRider?.name}`,
         },
       });
 
