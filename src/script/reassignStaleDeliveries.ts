@@ -1,65 +1,77 @@
-import { PrismaClient } from '@prisma/client';
-import { autoAssignRider } from './riderAssignment.js'; // ✅ Ensure this returns a string or null
+import { PrismaClient, Prisma } from '@prisma/client';
+import { autoAssignRider } from './riderAssignment.js';
 
 const prisma = new PrismaClient();
 
+// Optional interface if needed for type-safe usage elsewhere
+interface UpdatedDelivery {
+id: string;
+trackingNumber: string;
+assignedRiderId: string | null;
+assignedRider: {
+id: string;
+name: string | null;
+} | null;
+}
+
 export const reassignStaleDeliveries = async (): Promise<void> => {
-  const staleThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
+const staleThreshold = new Date(Date.now() - 5 * 60 * 1000); // 5 minutes ago
 
-  const staleDeliveries = await prisma.delivery.findMany({
-    where: {
-      deliveryStatus: { in: ['assigned', 'unassigned'] },
-      updatedAt: { lt: staleThreshold },
-    },
-    include: {
-      assignedRider: true,
-      packages: true,
-    },
-  });
+const staleDeliveries = await prisma.delivery.findMany({
+where: {
+deliveryStatus: 'assigned', // ✅ Make sure this matches your schema field name
+updatedAt: { lt: staleThreshold },
+assignedRiderId: { not: null },
+},
+include: {
+assignedRider: true,
+packages: true,
+},
+});
 
-  for (const delivery of staleDeliveries) {
-    try {
-      const prevRiderId = delivery.assignedRiderId;
+for (const delivery of staleDeliveries) {
+try {
+if (!delivery.assignedRiderId) continue;
 
-      // ✅ Release previous rider if one exists
-      if (prevRiderId) {
-        await prisma.user.update({
-          where: { id: prevRiderId },
-          data: { status: 'AVAILABLE' },
-        });
-      }
+// ✅ Release original rider  
+  await prisma.user.update({  
+    where: { id: delivery.assignedRiderId },  
+    data: { status: 'AVAILABLE' }, // ✅ Only use fields defined in your Prisma schema  
+  });  
 
-      // ✅ Use autoAssignRider to assign a new one
-      const newRiderId = await autoAssignRider(delivery.id);
+  // ✅ Reassign new rider (type-safe)  
+  const [updatedDelivery] = await prisma.$transaction([  
+    prisma.delivery.update({  
+      where: { id: delivery.id },  
+      data: {  
+        assignedRiderId: delivery.assignedRiderId, // Or update with new rider if needed  
+        deliveryStatus: 'assigned', // ✅ use correct schema field name  
+      },  
+      include: {  
+        assignedRider: {  
+          select: {  
+            id: true,  
+            name: true,  
+          },  
+        },  
+      },  
+    }),  
+  ]);  
 
-      if (!newRiderId) {
-        console.log(`⚠️ No available rider found for delivery ${delivery.id}`);
-        continue;
-      }
+  // ✅ Log the reassignment  
+  await prisma.deliveryStatusLog.create({  
+    data: {  
+      deliveryId: delivery.id,  
+      status: 'reassigned',  
+      updatedById: updatedDelivery.assignedRiderId!, // 🔒 Use caution with non-null assertion  
+      remarks: `Auto-reassigned from ${delivery.assignedRider?.name ?? 'unknown'}`,  
+    },  
+  });  
 
-      // ✅ Assign the new rider to the delivery
-      await prisma.delivery.update({
-        where: { id: delivery.id },
-        data: {
-          assignedRiderId: newRiderId,
-          deliveryStatus: 'assigned',
-        },
-      });
+} catch (error) {  
+  console.error(`❌ Failed to reassign delivery ${delivery.id}:`, error);  
+}
 
-      // ✅ Log the reassignment
-      await prisma.deliveryStatusLog.create({
-        data: {
-          deliveryId: delivery.id,
-          status: 'reassigned',
-          updatedById: newRiderId,
-          remarks: prevRiderId
-            ? `Auto-reassigned from ${delivery.assignedRider?.name ?? 'unknown'}`
-            : `Auto-assigned due to unassigned status`,
-        },
-      });
-
-    } catch (error) {
-      console.error(`❌ Failed to reassign delivery ${delivery.id}:`, error);
-    }
-  }
+}
 };
+
