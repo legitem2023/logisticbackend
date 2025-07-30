@@ -735,7 +735,7 @@ if (!user) {
           const assignedResult = await autoAssignRider(deliveryId);
           if(!assignedResult) {
             await prisma.delivery.update({
-            where:{ id:deliveryId },
+            where:{ id:updated.deliveryId },
             data:{
               deliveryStatus: "unassigned",
               updatedById: updated.senderId,
