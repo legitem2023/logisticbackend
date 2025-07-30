@@ -36,6 +36,16 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
         console.log(`⚠️ No available rider found for delivery ${delivery.id}`);
         continue;
       }
+
+      // ✅ Update the delivery with the new rider
+      await prisma.delivery.update({
+        where: { id: delivery.id },
+        data: {
+          assignedRiderId: newRiderId,
+          deliveryStatus: 'assigned',
+        },
+      });
+
       // ✅ Log the reassignment
       await prisma.deliveryStatusLog.create({
         data: {
@@ -47,6 +57,7 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
             : `Auto-assigned due to unassigned status`,
         },
       });
+
     } catch (error) {
       console.error(`❌ Failed to reassign delivery ${delivery.id}:`, error);
     }
