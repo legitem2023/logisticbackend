@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { autoAssignRider } from './riderAssignment.js'; // ✅ Now actually used
+import { autoAssignRider } from './riderAssignment.js'; // ✅ Ensure this returns a string or null
 
 const prisma = new PrismaClient();
 
@@ -37,7 +37,7 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
         continue;
       }
 
-      // ✅ Update the delivery with the new rider
+      // ✅ Assign the new rider to the delivery
       await prisma.delivery.update({
         where: { id: delivery.id },
         data: {
