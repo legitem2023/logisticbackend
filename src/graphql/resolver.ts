@@ -718,15 +718,13 @@ if (!user) {
             statusText:"Success"
           }
         } else {
-          await prisma.delivery.update(+{
-             data:{
+          await prisma.delivery.update({
+            where:{ id:deliveryId },
+            data:{
               status: "unassigned",
               updatedById: updated.senderId,
               timestamp: new Date(),
               remarks: "Rider Assignment failed!", 
-             },
-             where:{
-               id:deliveryId
              }
            })
           return {
