@@ -737,7 +737,7 @@ if (!user) {
             await prisma.delivery.update({
             where:{ id:deliveryId },
             data:{
-              status: "unassigned",
+              deliveryStatus: "unassigned",
               updatedById: updated.senderId,
               timestamp: new Date(),
               remarks: "Rider Assignment failed!", 
