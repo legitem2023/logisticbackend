@@ -738,9 +738,7 @@ if (!user) {
             where:{ id:updated.deliveryId },
             data:{
               deliveryStatus: "unassigned",
-              updatedById: updated.senderId,
-              timestamp: new Date(),
-              remarks: "Rider Assignment failed!", 
+              updatedAt: new Date()
              }
            })
           }
