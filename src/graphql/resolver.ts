@@ -732,6 +732,20 @@ if (!user) {
           }
         }*/
         if(updated){
+          const assignedResult = await autoAssignRider(deliveryId);
+          if(!assignedResult) {
+            await prisma.delivery.update({
+            where:{ id:deliveryId },
+            data:{
+              status: "unassigned",
+              updatedById: updated.senderId,
+              timestamp: new Date(),
+              remarks: "Rider Assignment failed!", 
+             }
+           })
+          }
+        }
+        if(updated){
           return {
             statusText:"Success"
           }
