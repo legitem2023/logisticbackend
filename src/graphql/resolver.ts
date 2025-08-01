@@ -701,57 +701,41 @@ if (!user) {
         
       }
     },
-    createPackage: async (_:any, {deliveryId,packageType,weight,dimensions,specialInstructions }:any) => {
-      try {
-        const updated = await prisma.package.create({
-          data:{
-            deliveryId,
-            packageType,
-            weight,
-            dimensions,
-            specialInstructions
-          }
-        })  
-       /* const result = await autoAssignRider(deliveryId);
-        if(result) {      
-           return {
-            statusText:"Success"
-          }
-        } else {
-          await prisma.delivery.update({
-            where:{ id:deliveryId },
-            data:{
-              status: "unassigned",
-              updatedById: updated.senderId,
-              timestamp: new Date(),
-              remarks: "Rider Assignment failed!", 
-             }
-           })
-          return {
-            statusText:"Success"
-          }
-        }*/
-        if(updated){
-          const assignedResult = await autoAssignRider(deliveryId);
-          if(!assignedResult) {
-            await prisma.delivery.update({
-            where:{ id:updated.deliveryId },
-            data:{
-              deliveryStatus: "unassigned",
-              updatedAt: new Date()
-             }
-           })
-          }
-        }
-        if(updated){
-          return {
-            statusText:"Success"
-          }
-        }
-      } catch (error) {
-        console.log(error);
+  createPackage: async (_: any, { deliveryId, packageType, weight, dimensions, specialInstructions }: any) => {
+    try {
+    // Create the package
+    const createdPackage = await prisma.package.create({
+      data: {
+        deliveryId,
+        packageType,
+        weight,
+        dimensions,
+        specialInstructions
       }
-    },
+    });
+
+    // Attempt to auto-assign a rider
+    const isAssigned = await autoAssignRider(deliveryId);
+    
+    if (!isAssigned) {
+      // If assignment fails, update delivery status
+      await prisma.delivery.update({
+        where: { id: deliveryId },
+        data: {
+          deliveryStatus: "unassigned",
+          updatedAt: new Date()
+        }
+      });
+    }
+
+    // Return success response
+    return { statusText: "Success" };
+    
+  } catch (error) {
+    console.error("Error in createPackage:", error);
+    throw error; // Consider throwing the error or returning an error response
+  }
+},
     readNotification: async (_:any, { notificationId }:any) => {
       try {
         const updated = await prisma.notification.update({
