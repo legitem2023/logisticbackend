@@ -98,7 +98,7 @@ async function init() {
 
 //Add this before starting your Apollo Server
 const reassignmentJob = new CronJob(
-  '*/5 * * * *', // Every 5 minutes
+  '*/1 * * * *', // Every 5 minutes
   async () => {
     console.log('Running stale delivery reassignment...');
     await reassignStaleDeliveries();
