@@ -44,7 +44,7 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
     },
   },
 });
-
+console.log(staleDeliveries,"<<<");
   for (const delivery of staleDeliveries) {
     try {
       // For deliveries with assigned riders, release them first
