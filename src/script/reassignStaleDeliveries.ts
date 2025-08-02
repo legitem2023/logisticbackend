@@ -1,5 +1,5 @@
-import { PrismaClient, Prisma } from '@prisma/client';
-//import { autoAssignRider } from './riderAssignment.js';
+/*import { PrismaClient, Prisma } from '@prisma/client';
+import { autoAssignRider } from './riderAssignment.js';
 
 const prisma = new PrismaClient();
 
@@ -93,3 +93,111 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
     }
   }
 };
+*/
+import { PrismaClient } from '@prisma/client';
+import { autoAssignRider } from './riderAssignment.js';
+
+const prisma = new PrismaClient();
+const SYSTEM_USER_ID = 'system-automation'; // Should be configured in your env
+
+interface DeliveryWithRider {
+  id: string;
+  assignedRiderId: string | null;
+  assignedRider: {
+    id: string;
+    name: string | null;
+  } | null;
+  deliveryStatus: string;
+  updatedAt: Date;
+  createdAt: Date;
+}
+
+export const reassignStaleDeliveries = async (): Promise<void> => {
+  const STALE_DURATION_MINUTES = 5;
+  const staleThreshold = new Date(Date.now() - STALE_DURATION_MINUTES * 60 * 1000);
+
+  try {
+    // Find stale deliveries in a single query
+    const staleDeliveries = await prisma.delivery.findMany({
+      where: {
+        OR: [
+          {
+            deliveryStatus: 'assigned',
+            updatedAt: { lt: staleThreshold },
+            assignedRiderId: { not: null },
+          },
+          {
+            deliveryStatus: 'unassigned',
+            createdAt: { lt: staleThreshold },
+            assignedRiderId: null,
+          }
+        ]
+      },
+      include: {
+        assignedRider: true,
+      },
+    });
+
+    if (staleDeliveries.length === 0) {
+      console.log('No stale deliveries found');
+      return;
+    }
+
+    console.log(`Found ${staleDeliveries.length} stale deliveries to process`);
+
+    // Process deliveries in transaction for atomicity
+    await prisma.$transaction(async (tx) => {
+      for (const delivery of staleDeliveries) {
+        const currentRiderId = delivery.assignedRiderId;
+        
+        // 1. Release current rider if exists
+        if (currentRiderId) {
+          await tx.user.update({
+            where: { id: currentRiderId },
+            data: { status: 'AVAILABLE' },
+          });
+        }
+
+        // 2. Find new rider (implement your actual logic here)
+        const newRider = await autoAssignRider(delivery.id);
+        const newRiderId = newRider?.id || null;
+        const newStatus = newRiderId ? 'assigned' : 'unassigned';
+
+        // 3. Update delivery with new assignment
+        await tx.delivery.update({
+          where: { id: delivery.id },
+          data: {
+            assignedRiderId: newRiderId,
+            deliveryStatus: newStatus,
+            updatedAt: new Date(),
+            statusLogs: {
+              create: {
+                status: newStatus,
+                updatedById: newRiderId || SYSTEM_USER_ID,
+                timestamp: new Date(),
+                remarks: generateRemarks(delivery, newRider),
+              },
+            },
+          },
+        });
+
+        console.log(`Processed delivery ${delivery.id}. New rider: ${newRider?.name || 'None'}`);
+      }
+    });
+
+    console.log('✅ Completed processing all stale deliveries');
+  } catch (error) {
+    console.error('❌ Error processing stale deliveries:', error);
+    throw error; // Rethrow for proper error handling upstream
+  }
+};
+
+
+function generateRemarks(delivery: DeliveryWithRider, newRider: { id: string; name: string | null } | null) {
+  const currentRiderName = delivery.assignedRider?.name || 'unknown';
+  const newRiderName = newRider?.name || 'none';
+  
+  return delivery.assignedRiderId
+    ? `Auto-reassigned from ${currentRiderName} to ${newRiderName}`
+    : `Auto-assigned to ${newRiderName}`;
+  }
