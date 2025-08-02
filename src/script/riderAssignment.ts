@@ -29,7 +29,7 @@ export const autoAssignRider = async (deliveryId: string) => {
     const [l, w, h] = pkg.dimensions?.split('x').map(Number) || [0, 0, 0];
     return sum + (l * w * h);
   }, 0);
-console.log(totalWeight,totalVolume);
+
   // 3. Find eligible active riders (without include)
   const eligibleRiders = await prisma.user.findMany({
     where: {
@@ -95,7 +95,8 @@ console.log(totalWeight,totalVolume);
   const bestRider = scoredRiders
     .filter(r => r.canCarry)
     .sort((a, b) => a.score - b.score)[0];
-  console.log(scoredRiders,'scored');  
+  console.log(scoredRiders,'scored');
+  console.log(totalWeight,totalVolume);
   if (!bestRider) {
     throw new Error('No suitable rider found within range');
   }
