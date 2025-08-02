@@ -2,7 +2,7 @@ import { PrismaClient, User, VehicleType } from '@prisma/client';
 import { calculateHaversineDistance } from './geoUtils.js';
 
 const prisma = new PrismaClient();
-let dist;
+let dist:any;
 interface ScoredRider extends User {
   score: number;
   canCarry: boolean;
