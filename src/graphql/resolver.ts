@@ -444,7 +444,7 @@ if (!user) {
         lastUpdatedAt: new Date(),
       },
     });
-
+  console.log(userID, latitude, longitude);
     pubsub.publish('LOCATION_TRACKING', { LocationTracking: args.input });
 
     return args.input;
