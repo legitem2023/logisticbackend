@@ -96,11 +96,11 @@ export const autoAssignRider = async (deliveryId: string) => {
     .filter(r => r.canCarry)
     .sort((a, b) => a.score - b.score)[0];
   //console.log(temporal,'bestrider');
-  
+console.log(dist,'Distance');  
   if (!bestRider) {
     throw new Error('No suitable rider found within range');
   }
-console.log(dist,'Distance');
+
   // 6. Assign rider and log status
   return await prisma.$transaction([
     prisma.delivery.update({
