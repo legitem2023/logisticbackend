@@ -542,10 +542,10 @@ if (!user) {
           deliveryStatus: "unassigned",
           statusLogs: {
             create: {
-              status: "Skip by rider",
+              status: "Skipped by rider",
               updatedById: riderId,
               timestamp: new Date(),
-              remarks: "Rider accepted the delivery",
+              remarks: "Rider skipped the delivery",
             },
           },
         },
@@ -559,13 +559,12 @@ if (!user) {
       const notification = {
         id: String(Date.now()),
         user: { id: updated.senderId, name: updated.sender.name },
-        title: "Delivery Accepted",
-        message: `Delivery accepted by ${Rider}`,
+        title: "Delivery Skipped",
+        message: `Delivery skipped by ${Rider}`,
         type: "delivery",
         isRead: false,
         createdAt: new Date().toISOString(),
       };
-
 
       await prisma.notification.create({
         data: {
@@ -580,12 +579,13 @@ if (!user) {
       pubsub.publish(NOTIFICATION_RECEIVED, {
         notificationReceived: notification,
       });
+      
       if(updated){
         return {
           statusText: "success",
         }
       }
-  return updated
+      return updated
     },
     finishDelivery: async (_:any, { deliveryId, riderId }:any) => {
       const updated = await prisma.delivery.update({
