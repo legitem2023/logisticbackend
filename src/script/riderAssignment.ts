@@ -107,17 +107,18 @@ export const autoAssignRider = async (deliveryId: string) => {
       data: {
         assignedRiderId: bestRider.id,
         deliveryStatus: 'assigned',
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        statusLogs: {
+            create: {
+              status: "assigned",
+              updatedById: bestRider.id,
+              timestamp: new Date(),
+              remarks: `Auto-assigned to ${bestRider.name} (Score: ${bestRider.score.toFixed(1)})`
+            },
+          },
       },
       include: { assignedRider: true }
     }),
-    prisma.deliveryStatusLog.create({
-      data: {
-        deliveryId,
-        status: 'assigned',
-        updatedById: bestRider.id,
-        remarks: `Auto-assigned to ${bestRider.name} (Score: ${bestRider.score.toFixed(1)})`
-      }
-    })
+   
   ]);
 };
