@@ -48,6 +48,11 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
             deliveryStatus: 'unassigned',
             createdAt: { lt: staleThreshold },
             assignedRiderId: null,
+          },
+          {
+            deliveryStatus: 'Pending',
+            createdAt: { lt: staleThreshold },
+            assignedRiderId: { not:null },  
           }
         ]
       },
