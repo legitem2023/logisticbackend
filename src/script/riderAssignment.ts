@@ -2,7 +2,7 @@ import { PrismaClient, User, VehicleType } from '@prisma/client';
 import { calculateHaversineDistance } from './geoUtils.js';
 
 const prisma = new PrismaClient();
-
+let dist;
 interface ScoredRider extends User {
   score: number;
   canCarry: boolean;
@@ -54,6 +54,7 @@ export const autoAssignRider = async (deliveryId: string) => {
       [rider.currentLatitude!, rider.currentLongitude!],
       [delivery.pickupLatitude, delivery.pickupLongitude]
     );
+    dist = distance;
     if (distance > 15) continue;
   // console.log(distance,'distance');
     const currentDeliveries = await prisma.delivery.count({
@@ -99,7 +100,7 @@ export const autoAssignRider = async (deliveryId: string) => {
   if (!bestRider) {
     throw new Error('No suitable rider found within range');
   }
-//console.log(deliveryId,'delId');
+console.log(dist,'Distance');
   // 6. Assign rider and log status
   return await prisma.$transaction([
     prisma.delivery.update({
