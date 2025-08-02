@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, User } from '@prisma/client';
 import { autoAssignRider } from './riderAssignment.js';
 
 const prisma = new PrismaClient();
@@ -18,12 +18,25 @@ interface DeliveryWithRider {
   createdAt: Date;
 }
 
+interface RiderResult {
+  id: string;
+  name: string | null;
+  image?: string | null;
+  email?: string | null;
+  phoneNumber?: string;
+  passwordHash?: string | null;
+  vehicleTypeId?: string | null;
+  status?: string;
+  rating?: number | null;
+}
+
+// Main function
 export const reassignStaleDeliveries = async (): Promise<void> => {
   const STALE_DURATION_MINUTES = 5;
   const staleThreshold = new Date(Date.now() - STALE_DURATION_MINUTES * 60 * 1000);
 
   try {
-    const staleDeliveries = await prisma.delivery.findMany({
+    const staleDeliveries: DeliveryWithRider[] = await prisma.delivery.findMany({
       where: {
         OR: [
           {
@@ -61,6 +74,7 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
   }
 };
 
+// Process deliveries in a transaction
 async function processDeliveries(deliveries: DeliveryWithRider[]): Promise<void> {
   await prisma.$transaction(async (tx) => {
     for (const delivery of deliveries) {
@@ -69,6 +83,7 @@ async function processDeliveries(deliveries: DeliveryWithRider[]): Promise<void>
   });
 }
 
+// Retry logic per delivery
 async function processDeliveryWithRetry(
   tx: Prisma.TransactionClient,
   delivery: DeliveryWithRider,
@@ -84,7 +99,7 @@ async function processDeliveryWithRetry(
       });
     }
 
-    const newRider = await autoAssignRider(delivery.id);
+    const newRider: RiderResult | null = await autoAssignRider(delivery.id);
     const newRiderId = newRider?.id || null;
     const newStatus = newRiderId ? 'assigned' : 'unassigned';
 
@@ -117,6 +132,7 @@ async function processDeliveryWithRetry(
   }
 }
 
+// Remarks generator
 function generateRemarks(delivery: DeliveryWithRider, newRider: { id: string; name: string | null } | null): string {
   const currentRiderName = delivery.assignedRider?.name || 'unknown';
   const newRiderName = newRider?.name || 'none';
