@@ -1,5 +1,5 @@
 import { PrismaClient, Prisma, User } from '@prisma/client';
-import { autoAssignRider } from './riderAssignment.js';
+import { getBestAvailableRider } from './getBestAvailableRider.js';
 
 const prisma = new PrismaClient();
 const SYSTEM_USER_ID = process.env.SYSTEM_USER_ID || 'system-automation';
@@ -99,7 +99,7 @@ async function processDeliveryWithRetry(
       });
     }
 
-    const newRider: RiderResult | null = await autoAssignRider(delivery.id);
+    const newRider: RiderResult | null = await getBestAvailableRider(delivery.id);
     const newRiderId = newRider?.id || null;
     const newStatus = newRiderId ? 'assigned' : 'unassigned';
 
