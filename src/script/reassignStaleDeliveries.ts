@@ -65,6 +65,15 @@ console.log(staleDeliveries,"<<<");
           data: {
             assignedRiderId: delivery.assignedRiderId,
             deliveryStatus: 'assigned',
+            updatedAt: new Date(),
+            statusLogs: {
+              create: {
+                status: "assigned",
+                updatedById: updatedDelivery.assignedRiderId,
+                timestamp: new Date(),
+                remarks: delivery.assignedRiderId ? `Auto-reassigned from ${delivery.assignedRider?.name ?? 'unknown'} to ${updatedDelivery.assignedRider?.name}`: `Auto-assigned to ${updatedDelivery.assignedRider?.name}`
+              },
+          },
           },
           include: {
             assignedRider: {
@@ -77,17 +86,6 @@ console.log(staleDeliveries,"<<<");
         }),
       ]);
 
-      // Log the reassignment or assignment
-      await prisma.deliveryStatusLog.create({
-        data: {
-          deliveryId: delivery.id,
-          status: delivery.assignedRiderId ? 'reassigned' : 'assigned',
-          updatedById: updatedDelivery.assignedRiderId!,
-          remarks: delivery.assignedRiderId 
-            ? `Auto-reassigned from ${delivery.assignedRider?.name ?? 'unknown'} to ${updatedDelivery.assignedRider?.name}`
-            : `Auto-assigned to ${updatedDelivery.assignedRider?.name}`,
-        },
-      });
 
     } catch (error) {
       console.error(`❌ Failed to process delivery ${delivery.id}:`, error);
