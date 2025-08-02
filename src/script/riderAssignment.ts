@@ -29,7 +29,7 @@ export const autoAssignRider = async (deliveryId: string) => {
     const [l, w, h] = pkg.dimensions?.split('x').map(Number) || [0, 0, 0];
     return sum + (l * w * h);
   }, 0);
-
+console.log(totalWeight,totalVolume);
   // 3. Find eligible active riders (without include)
   const eligibleRiders = await prisma.user.findMany({
     where: {
