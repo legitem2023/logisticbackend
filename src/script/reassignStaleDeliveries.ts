@@ -52,7 +52,7 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
           {
             deliveryStatus: 'Pending',
             createdAt: { lt: staleThreshold },
-            assignedRiderId: { not:null },  
+            assignedRiderId: null,  
           }
         ]
       },
