@@ -140,7 +140,6 @@ async function processDeliveryWithRetry(
           statusLogs: {
             create: {
               status: 'failed',
-              updatedById: SYSTEM_USER_ID,
               timestamp: new Date(),
               remarks: 'Automatically marked as failed after multiple reassignment attempts',
             },
