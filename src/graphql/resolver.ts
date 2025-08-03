@@ -538,7 +538,7 @@ if (!user) {
       const updated = await prisma.delivery.update({
         where: { id: deliveryId },
         data: {
-          assignedRiderId: riderId,
+          assignedRiderId: null,
           deliveryStatus: "unassigned",
           rejection: {
             create:{
