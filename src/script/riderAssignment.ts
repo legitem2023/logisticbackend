@@ -26,9 +26,16 @@ export const autoAssignRider = async (deliveryId: string) => {
   // 2. Calculate total package weight/volume
   const totalWeight = delivery.packages.reduce((sum, pkg) => sum + (pkg.weight || 0), 0);
   const totalVolume = delivery.packages.reduce((sum, pkg) => {
-    const [l, w, h] = pkg.dimensions?.split('x').map(Number) || [0, 0, 0];
+    if (!pkg.dimensions) return sum;
+
+    const dims = pkg.dimensions.split('x').map(Number);
+    const [l, w, h] = dims;
+
+    if ([l, w, h].some(v => isNaN(v))) return sum; // skip invalid dimensions
+
     return sum + (l * w * h);
   }, 0);
+
   console.log(totalWeight, totalVolume);
   // 3. Find eligible active riders (without include)
   const eligibleRiders = await prisma.user.findMany({
