@@ -135,7 +135,6 @@ async function processDeliveryWithRetry(
       await tx.delivery.update({
         where: { id: delivery.id },
         data: {
-          assignedRiderId:'failed',
           deliveryStatus: 'failed',
           updatedAt: new Date(),
           statusLogs: {
