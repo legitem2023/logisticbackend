@@ -102,9 +102,10 @@ model Delivery {
 }
 
 model SkippedBy {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  delivery    Delivery @relation(fields: [deliveryId], references: [id])
-  riderId String?  @db.ObjectId
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId String   @db.ObjectId
+  delivery   Delivery @relation(fields: [deliveryId], references: [id])
+  riderId    String?  @db.ObjectId
 }
 
 model DeliveryStatusLog {
