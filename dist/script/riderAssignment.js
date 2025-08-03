@@ -47,7 +47,6 @@ export const autoAssignRider = async (deliveryId) => {
     const scoredRiders = [];
     for (const rider of eligibleRiders) {
         const distance = calculateHaversineDistance([rider.currentLatitude, rider.currentLongitude], [delivery.pickupLatitude, delivery.pickupLongitude]);
-        dist = distance;
         if (distance > 15)
             continue;
         const currentDeliveries = await prisma.delivery.count({
@@ -74,6 +73,7 @@ export const autoAssignRider = async (deliveryId) => {
             currentDeliveries,
             vehicleType }));
     }
+    console.log(scoredRiders, '<-scoredRiders-');
     // 5. Select best available rider
     const bestRider = scoredRiders
         .filter(r => r.canCarry)
