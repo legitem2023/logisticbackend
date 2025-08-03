@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
+import { autoAssignRider } from '../script/riderAssignment.js';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
 import { PubSub, withFilter } from "graphql-subscriptions";
@@ -38,6 +39,9 @@ export const resolvers = {
                         assignedRider: true, // Include full rider info in the response
                         packages: true,
                     },
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
                 });
                 return data;
             }
@@ -72,14 +76,13 @@ export const resolvers = {
         },
         getVehicleTypes: async (_, _args) => {
             const data = await prisma.vehicleType.findMany();
-            console.log(data);
             return data;
         },
         getRiders: async (_, _args) => {
             const data = await prisma.user.findMany({ where: { role: 'RIDER' }, include: {
                     vehicleType: true
                 } });
-            console.log(data);
+            //console.log(data,"<===");
             return data;
         },
         getNotifications: async (_, args) => {
@@ -101,6 +104,7 @@ export const resolvers = {
     },
     Mutation: {
         createDelivery: async (_, args) => {
+            var _a;
             try {
                 const { senderId, recipientName, recipientPhone, pickupAddress, pickupLatitude, pickupLongitude, dropoffAddress, dropoffLatitude, dropoffLongitude, assignedRiderId, estimatedDeliveryTime, // this is a string
                 deliveryType, paymentStatus, paymentMethod, deliveryFee, baseRate, perKmRate, distance } = args.input;
@@ -168,6 +172,37 @@ export const resolvers = {
                     include: {
                         sender: true,
                         assignedRider: true
+                    }
+                });
+                const notification = {
+                    id: String(Date.now()),
+                    user: { id: "686ffdf59a1ad0a2e9c79f0b" },
+                    title: "New Delivery Created",
+                    message: `Assign a Rider to this delivery`,
+                    type: "delivery",
+                    isRead: false,
+                    createdAt: new Date().toISOString(),
+                };
+                await prisma.notification.create({
+                    data: {
+                        userId: "686ffdf59a1ad0a2e9c79f0b",
+                        title: notification.title,
+                        message: notification.message,
+                        type: notification.type,
+                        isRead: notification.isRead,
+                        createdAt: new Date(notification.createdAt)
+                    }
+                });
+                pubsub.publish(NOTIFICATION_RECEIVED, {
+                    notificationReceived: notification,
+                });
+                // 2c. Log the reassignment
+                await prisma.deliveryStatusLog.create({
+                    data: {
+                        deliveryId: delivery.id,
+                        status: 'reassigned',
+                        updatedById: assignedRiderId,
+                        remarks: `Auto-reassigned from ${(_a = delivery.assignedRider) === null || _a === void 0 ? void 0 : _a.name}`
                     }
                 });
                 return {
@@ -332,11 +367,22 @@ export const resolvers = {
         },
         locationTracking: async (_, args) => {
             try {
-                pubsub.publish(LOCATION_TRACKING, { LocationTracking: args.input });
+                const { userID, latitude, longitude } = args.input;
+                await prisma.user.update({
+                    where: { id: userID },
+                    data: {
+                        currentLatitude: latitude,
+                        currentLongitude: longitude,
+                        lastUpdatedAt: new Date(),
+                    },
+                });
+                console.log(userID, latitude, longitude);
+                pubsub.publish('LOCATION_TRACKING', { LocationTracking: args.input });
                 return args.input;
             }
             catch (error) {
-                console.log(error);
+                console.log('Error updating location:', error);
+                throw new Error('Failed to update location');
             }
         },
         sendNotification: async (_, { userID, title, message, type }) => {
@@ -391,6 +437,62 @@ export const resolvers = {
                 user: { id: updated.senderId, name: updated.sender.name },
                 title: "Delivery Accepted",
                 message: `Delivery accepted by ${Rider}`,
+                type: "delivery",
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            };
+            await prisma.notification.create({
+                data: {
+                    userId: notification.user.id,
+                    title: notification.title,
+                    message: notification.message,
+                    type: notification.type,
+                    isRead: notification.isRead,
+                    createdAt: new Date(notification.createdAt)
+                }
+            });
+            pubsub.publish(NOTIFICATION_RECEIVED, {
+                notificationReceived: notification,
+            });
+            if (updated) {
+                return {
+                    statusText: "success",
+                };
+            }
+            return updated;
+        },
+        skipDelivery: async (_, { deliveryId, riderId }) => {
+            var _a;
+            const updated = await prisma.delivery.update({
+                where: { id: deliveryId },
+                data: {
+                    assignedRiderId: null,
+                    deliveryStatus: "unassigned",
+                    rejection: {
+                        create: {
+                            riderId: riderId
+                        }
+                    },
+                    statusLogs: {
+                        create: {
+                            status: "Skipped by rider",
+                            updatedById: riderId,
+                            timestamp: new Date(),
+                            remarks: "Rider skipped the delivery",
+                        },
+                    },
+                },
+                include: {
+                    assignedRider: true,
+                    sender: true
+                },
+            });
+            const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
+            const notification = {
+                id: String(Date.now()),
+                user: { id: updated.senderId, name: updated.sender.name },
+                title: "Delivery Skipped",
+                message: `Delivery skipped by ${Rider}`,
                 type: "delivery",
                 isRead: false,
                 createdAt: new Date().toISOString(),
@@ -578,7 +680,8 @@ export const resolvers = {
         },
         createPackage: async (_, { deliveryId, packageType, weight, dimensions, specialInstructions }) => {
             try {
-                const updated = await prisma.package.create({
+                // Create the package
+                const createdPackage = await prisma.package.create({
                     data: {
                         deliveryId,
                         packageType,
@@ -587,13 +690,24 @@ export const resolvers = {
                         specialInstructions
                     }
                 });
-                if (updated) {
-                    return {
-                        statusText: "Success"
-                    };
+                // Attempt to auto-assign a rider
+                const isAssigned = await autoAssignRider(deliveryId);
+                if (!isAssigned) {
+                    // If assignment fails, update delivery status
+                    await prisma.delivery.update({
+                        where: { id: deliveryId },
+                        data: {
+                            deliveryStatus: "unassigned",
+                            updatedAt: new Date()
+                        }
+                    });
                 }
+                // Return success response
+                return { statusText: "Success" };
             }
             catch (error) {
+                console.error("Error in createPackage:", error);
+                throw error; // Consider throwing the error or returning an error response
             }
         },
         readNotification: async (_, { notificationId }) => {
