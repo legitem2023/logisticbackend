@@ -540,6 +540,11 @@ if (!user) {
         data: {
           assignedRiderId: riderId,
           deliveryStatus: "unassigned",
+          rejection: {
+            create:{
+              riderId:riderId
+            }
+          },
           statusLogs: {
             create: {
               status: "Skipped by rider",
