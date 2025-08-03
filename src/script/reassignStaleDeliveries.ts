@@ -131,8 +131,23 @@ async function processDeliveryWithRetry(
       console.warn(`Retrying delivery ${delivery.id} (${retriesLeft} retries left)`);
       await processDeliveryWithRetry(tx, delivery, retriesLeft - 1);
     } else {
-      console.error(`❌ Failed to process delivery ${delivery.id} after ${MAX_RETRIES} attempts`);
-      throw error;
+      console.error(`❌ Failed to process delivery ${delivery.id} after ${MAX_RETRIES} attempts. Marking as failed.`);
+      await tx.delivery.update({
+        where: { id: delivery.id },
+        data: {
+          assignedRiderId:'failed',
+          deliveryStatus: 'failed',
+          updatedAt: new Date(),
+          statusLogs: {
+            create: {
+              status: 'failed',
+              updatedById: SYSTEM_USER_ID,
+              timestamp: new Date(),
+              remarks: 'Automatically marked as failed after multiple reassignment attempts',
+            },
+          },
+        },
+      });
     }
   }
 }
