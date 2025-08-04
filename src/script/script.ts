@@ -75,3 +75,23 @@ export function calculateDistanceInKm(
 
   return R * c;
 }
+
+type notification = {
+      userId:string,
+      title: string,
+      message: string,
+      type: string,
+  };
+
+export const notifier = async(notification:notification) => {
+    await prisma.notification.create({
+        data: {
+          userId: notification.userId,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          isRead: false,
+          createdAt: new Date(new Date().toISOString())
+      }
+    });
+}
