@@ -1,5 +1,6 @@
 import { PrismaClient, User, VehicleType } from '@prisma/client';
 import { calculateHaversineDistance } from './geoUtils.js';
+import { notifier } from './script.js';
 
 const prisma = new PrismaClient();
 let dist:any;
@@ -127,4 +128,15 @@ export const autoAssignRider = async (deliveryId: string) => {
     }),
    
   ]);
+
+  const note = async(bestRider)=>{
+    const notification = {
+        userId:bestRider.id,
+        title: "You have been assigned a delivery",
+        message: `You have been assigned a delivery`,
+        type: "delivery"
+      };
+    await notifier(notification);
+  }
 };
+note();
