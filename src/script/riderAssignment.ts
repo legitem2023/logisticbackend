@@ -138,5 +138,6 @@ export const autoAssignRider = async (deliveryId: string) => {
       };
     await notifier(notification);
   }
+  note(bestRider);
 };
-note(bestRider);
+
