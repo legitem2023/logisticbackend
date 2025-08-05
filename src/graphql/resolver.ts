@@ -4,7 +4,7 @@ import { autoAssignRider } from '../script/riderAssignment.js';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
 import { PubSub, withFilter } from "graphql-subscriptions";
-
+import { notifier } from '../script/script.js';
 
 const prisma = new PrismaClient()
 import bcrypt from 'bcrypt';
