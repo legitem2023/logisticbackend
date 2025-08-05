@@ -1,9 +1,10 @@
 import { format } from 'date-fns'
 import { PrismaClient } from '@prisma/client'
-
+import { PubSub, withFilter } from "graphql-subscriptions";
 
 import bcrypt from 'bcrypt';
-
+export const pubsub = new PubSub();
+const NOTIFICATION_RECEIVED:any = "";
 /**
  * Hashes a plain text password using bcrypt.
  * @param plainPassword - The password to encrypt
@@ -93,5 +94,8 @@ export const notifier = async(notification:notification) => {
           isRead: false,
           createdAt: new Date(new Date().toISOString())
       }
+    });
+    pubsub.publish(NOTIFICATION_RECEIVED, {
+        notificationReceived: notification,
     });
 }
