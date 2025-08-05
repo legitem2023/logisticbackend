@@ -107,6 +107,16 @@ export const autoAssignRider = async (deliveryId: string) => {
     throw new Error('No suitable rider found within range');
   }
 
+  const note = async(bestRider:any)=>{
+    const notification:any = {
+        userId:bestRider.id,
+        title: "You have been assigned a delivery",
+        message: `You have been assigned a delivery`,
+        type: "delivery"
+      };
+    await notifier(notification);
+  }
+  note(bestRider);
   // 6. Assign rider and log status
   return await prisma.$transaction([
     prisma.delivery.update({
@@ -129,15 +139,6 @@ export const autoAssignRider = async (deliveryId: string) => {
    
   ]);
 
-  const note = async(bestRider:any)=>{
-    const notification:any = {
-        userId:bestRider.id,
-        title: "You have been assigned a delivery",
-        message: `You have been assigned a delivery`,
-        type: "delivery"
-      };
-    await notifier(notification);
-  }
-  note(bestRider);
+  
 };
 
