@@ -129,8 +129,8 @@ export const autoAssignRider = async (deliveryId: string) => {
    
   ]);
 
-  const note = async(bestRider)=>{
-    const notification = {
+  const note = async(bestRider:any)=>{
+    const notification:any = {
         userId:bestRider.id,
         title: "You have been assigned a delivery",
         message: `You have been assigned a delivery`,
@@ -139,4 +139,4 @@ export const autoAssignRider = async (deliveryId: string) => {
     await notifier(notification);
   }
 };
-note();
+note(bestRider);
