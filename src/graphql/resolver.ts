@@ -29,6 +29,7 @@ export const resolvers = {
           sender: true,        // include rider info
           assignedRider:true,
           packages:true,
+          proofOfDelivery:true
         },
       })
     },
@@ -42,6 +43,7 @@ export const resolvers = {
           sender:true,
           assignedRider: true, // Include full rider info in the response
           packages:true,
+          proofOfDelivery:true
         },        
         orderBy: {
           createdAt: 'desc',
@@ -61,6 +63,7 @@ export const resolvers = {
             sender: true,        // include rider info
             assignedRider:true,
             packages:true,
+            proofOfDelivery:true
           },
         })
     },
