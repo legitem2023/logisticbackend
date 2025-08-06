@@ -83,7 +83,7 @@ type Delivery {
   assignedRiderId: String
   packageId: String
   packages:[Package]
-  proof: ProofOfDelivery
+  proofOfDelivery: ProofOfDelivery
   baseRate: Float
   perKmRate: Float
   distance: Float
