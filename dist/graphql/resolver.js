@@ -4,6 +4,8 @@ import { autoAssignRider } from '../script/riderAssignment.js';
 import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
 import { PubSub, withFilter } from "graphql-subscriptions";
+import fs from 'fs';
+import path from 'path';
 const prisma = new PrismaClient();
 import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
@@ -25,6 +27,7 @@ export const resolvers = {
                     sender: true, // include rider info
                     assignedRider: true,
                     packages: true,
+                    proofOfDelivery: true
                 },
             });
         },
@@ -38,6 +41,7 @@ export const resolvers = {
                         sender: true,
                         assignedRider: true, // Include full rider info in the response
                         packages: true,
+                        proofOfDelivery: true
                     },
                     orderBy: {
                         createdAt: 'desc',
@@ -55,6 +59,7 @@ export const resolvers = {
                     sender: true, // include rider info
                     assignedRider: true,
                     packages: true,
+                    proofOfDelivery: true
                 },
             });
         },
@@ -67,6 +72,7 @@ export const resolvers = {
                     sender: true,
                     assignedRider: true, // Include full rider info in the response
                     packages: true,
+                    proofOfDelivery: true
                 },
                 orderBy: {
                     createdAt: 'desc',
@@ -742,7 +748,32 @@ export const resolvers = {
             catch (error) {
                 console.log(error);
             }
-        }
+        },
+        uploadFile: async (_parent, { file }) => {
+            // Wait for the file promise to resolve
+            const { createReadStream, filename, mimetype, encoding } = await file;
+            // Choose where to save the file
+            const uploadDir = path.join(process.cwd(), 'public/uploads');
+            // Make sure uploads folder exists
+            if (!fs.existsSync(uploadDir)) {
+                fs.mkdirSync(uploadDir);
+            }
+            // Create file path
+            const filePath = path.join(uploadDir, filename);
+            // Save file to disk
+            return new Promise((resolve, reject) => {
+                const stream = createReadStream();
+                const out = fs.createWriteStream(filePath);
+                stream.pipe(out);
+                out.on('finish', () => resolve({
+                    filename,
+                    mimetype,
+                    encoding,
+                    url: `/public/uploads/${filename}`, // you can serve this statically
+                }));
+                out.on('error', reject);
+            });
+        },
     },
     Subscription: {
         LocationTracking: {

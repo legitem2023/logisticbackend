@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { calculateHaversineDistance } from './geoUtils.js';
+import { notifier } from './script.js';
 const prisma = new PrismaClient();
 let dist;
 export const autoAssignRider = async (deliveryId) => {
@@ -81,6 +82,16 @@ export const autoAssignRider = async (deliveryId) => {
     if (!bestRider) {
         throw new Error('No suitable rider found within range');
     }
+    const note = async (bestRider) => {
+        const notification = {
+            userId: bestRider.id,
+            title: "You have been assigned a delivery",
+            message: `You have been assigned a delivery`,
+            type: "delivery"
+        };
+        await notifier(notification);
+    };
+    note(bestRider);
     // 6. Assign rider and log status
     return await prisma.$transaction([
         prisma.delivery.update({

@@ -77,7 +77,7 @@ async function init() {
     app.use(cookieParser());
     app.get('/playground', playground.default({ endpoint: '/graphql' }));
     //Add this before starting your Apollo Server
-    const reassignmentJob = new CronJob('*/1 * * * *', // Every 5 minutes
+    const reassignmentJob = new CronJob('*/5 * * * *', // Every 5 minutes
     async () => {
         console.log('Running stale delivery reassignment...');
         await reassignStaleDeliveries();

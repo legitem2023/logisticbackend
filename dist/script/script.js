@@ -1,6 +1,9 @@
 import { format } from 'date-fns';
 import { PrismaClient } from '@prisma/client';
+import { PubSub } from "graphql-subscriptions";
 import bcrypt from 'bcrypt';
+export const pubsub = new PubSub();
+const NOTIFICATION_RECEIVED = "";
 /**
  * Hashes a plain text password using bcrypt.
  * @param plainPassword - The password to encrypt
@@ -47,3 +50,18 @@ export function calculateDistanceInKm(picklat, picklon, riderlat, riderlon) {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
 }
+export const notifier = async (notification) => {
+    await prisma.notification.create({
+        data: {
+            userId: notification.userId,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            isRead: false,
+            createdAt: new Date(new Date().toISOString())
+        }
+    });
+    pubsub.publish(NOTIFICATION_RECEIVED, {
+        notificationReceived: notification,
+    });
+};

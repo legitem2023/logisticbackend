@@ -1,5 +1,7 @@
 import { gql } from 'graphql-tag';
 export const typeDefs = gql `
+scalar Upload
+
 
 type VehicleType {
   id: String
@@ -78,6 +80,7 @@ type Delivery {
   assignedRiderId: String
   packageId: String
   packages:[Package]
+  proofOfDelivery: [ProofOfDelivery]
   baseRate: Float
   perKmRate: Float
   distance: Float
@@ -214,8 +217,15 @@ input LocationTrackingInput {
   timestamp: String
 }
 
+type FileResponse {
+    filename: String
+    mimetype: String
+    encoding: String
+    url: String
+}
 
 type Mutation {
+  uploadFile(file: Upload!): FileResponse
   assignRider(deliveryId: String!, riderId: String!): Result
   createDelivery(input: CreateDeliveryInput):Result
   createRider(input: CreateRiderInput): Result
