@@ -827,7 +827,7 @@ if (!user) {
        console.log(error); 
       }
     },
-    uploadFile: async (_parent, { file }) => {
+    uploadFile: async (_parent:any, { file }:any) => {
       // Wait for the file promise to resolve
       const { createReadStream, filename, mimetype, encoding } = await file;
 
