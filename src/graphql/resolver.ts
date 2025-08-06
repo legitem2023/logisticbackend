@@ -76,6 +76,7 @@ export const resolvers = {
           sender:true,
           assignedRider: true, // Include full rider info in the response
           packages:true,
+          proofOfDelivery:true
         },
         orderBy: {
           createdAt: 'desc',
