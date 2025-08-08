@@ -831,38 +831,33 @@ if (!user) {
        console.log(error); 
       }
     },
-    uploadFile: async (_parent:any, { file }:any) => {
-      // Wait for the file promise to resolve
-      const { createReadStream, filename, mimetype, encoding } = await file;
+    uploadFile: async (_parent: any, { input }: any) => {
+      const { id, receivedBy, receivedAt, photoUrl, signatureData } = input;
 
-      // Choose where to save the file
-      const uploadDir = path.join(process.cwd(), 'public/uploads');
+      // Save images
+      const photoFile = saveBase64Image(photoUrl, `photo-${id}.jpg`);
+      const signatureFile = saveBase64Image(signatureData, `signature-${id}.png`);
 
-      // Make sure uploads folder exists
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir);
-      }
-
-      // Create file path
-      const filePath = path.join(uploadDir, filename);
-
-      // Save file to disk
-      return new Promise((resolve, reject) => {
-        const stream = createReadStream();
-        const out = fs.createWriteStream(filePath);
-        stream.pipe(out);
-        out.on('finish', () =>
-          resolve({
-            filename,
-            mimetype,
-            encoding,
-            url: `/public/uploads/${filename}`, // you can serve this statically
-          })
-        );
-        out.on('error', reject);
+      // Save to DB
+      const record = await prisma.deliveryProof.create({
+        data: {
+          id,
+          receivedBy,
+          receivedAt: new Date(receivedAt),
+          photoPath: photoFile.url,
+          signaturePath: signatureFile.url,
+        },
       });
+
+      return {
+        id: record.id,
+        receivedBy: record.receivedBy,
+        receivedAt: record.receivedAt.toISOString(),
+        photo: photoFile,
+        signature: signatureFile,
+      };
     },
- 
+  
  },
 Subscription: {
   LocationTracking: {
