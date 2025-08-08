@@ -95,7 +95,7 @@ model Delivery {
   perKmRate            Float?
   distance             Float?
   statusLogs           DeliveryStatusLog[]
-  proofOfDelivery      ProofOfDelivery?
+  proofOfDelivery      ProofOfDelivery[]
   packages             Package[]
   routeHistory         RouteHistory[]
   rejection            SkippedBy[]
