@@ -227,8 +227,16 @@ type FileResponse {
     url: String
 }
 
+input ProofOfDeliveryInput {
+  id: String!
+  receivedBy: String!
+  receivedAt: String!
+  photoUrl: String!
+  signatureData: String!
+}
+
 type Mutation {
-  uploadFile(file: Upload!): FileResponse
+  uploadFile(file: ProofOfDeliveryInput!): Result
   assignRider(deliveryId: String!, riderId: String!): Result
   createDelivery(input: CreateDeliveryInput):Result
   createRider(input: CreateRiderInput): Result
