@@ -136,7 +136,7 @@ const reassignmentJob = new CronJob(
   await new Promise<void>((resolve) => httpServer.listen(Port, resolve));
   console.log(`🚀 Server ready at ${URL}:${Port}/graphql`);
   console.log(`🧪 Playground available at ${URL}:${Port}/playground`);
-}
+}  
 
 init().catch((err) => {
   console.error('❌ Server failed to start:', err);
