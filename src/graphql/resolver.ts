@@ -836,8 +836,9 @@ if (!user) {
        console.log(error); 
       }
     },
-    uploadFile: async (_parent: any, { input }: any) => {
-      const { id, receivedBy, receivedAt, photoUrl, signatureData } = input;
+    uploadFile: async (_parent: any, { file }: any) => {
+
+      const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
 
       // Save images
       const photoFile = saveBase64Image(photoUrl, `photo-${id}.jpg`);

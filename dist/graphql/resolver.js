@@ -748,8 +748,8 @@ export const resolvers = {
                 console.log(error);
             }
         },
-        uploadFile: async (_parent, { input }) => {
-            const { id, receivedBy, receivedAt, photoUrl, signatureData } = input;
+        uploadFile: async (_parent, { file }) => {
+            const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
             // Save images
             const photoFile = saveBase64Image(photoUrl, `photo-${id}.jpg`);
             const signatureFile = saveBase64Image(signatureData, `signature-${id}.png`);
