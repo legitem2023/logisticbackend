@@ -127,6 +127,8 @@ const reassignmentJob = new CronJob(
   app.use(express.static('json'));
   app.use(express.static('model'));
   app.use(express.static('model/category_images'));
+  app.use(express.static('public/uploads'));
+
   app.use('/docs', express.static('docs'));
   // app.use('/graph-voyager', voyagerMiddleware({ endpointUrl: '/graphql' }));
 
