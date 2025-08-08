@@ -839,22 +839,18 @@ if (!user) {
       const signatureFile = saveBase64Image(signatureData, `signature-${id}.png`);
 
       // Save to DB
-      const record = await prisma.deliveryProof.create({
+      const record = await prisma.proofOfDelivery.create({
         data: {
-          id,
-          receivedBy,
+          deliveryId:id,
+          receivedBy:receivedBy,
           receivedAt: new Date(receivedAt),
-          photoPath: photoFile.url,
-          signaturePath: signatureFile.url,
+          photoUrl: photoFile.url,
+          signatureData: signatureFile.url,
         },
       });
 
       return {
-        id: record.id,
-        receivedBy: record.receivedBy,
-        receivedAt: record.receivedAt.toISOString(),
-        photo: photoFile,
-        signature: signatureFile,
+        statusText:'Success'
       };
     },
   
