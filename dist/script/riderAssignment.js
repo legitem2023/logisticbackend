@@ -34,7 +34,7 @@ export const autoAssignRider = async (deliveryId) => {
             role: 'RIDER',
             status: 'AVAILABLE',
             lastUpdatedAt: {
-                gte: new Date(Date.now() - 5 * 60 * 1000)
+                gte: new Date(Date.now() - 45 * 60 * 1000)
             },
             currentLatitude: { not: null },
             currentLongitude: { not: null },
