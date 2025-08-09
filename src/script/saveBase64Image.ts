@@ -40,7 +40,7 @@ import { v4 as uuidv4 } from 'uuid';
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_ANON_KEY!
 );*/
-import { createClient } from '@supabase/supabase-js'
+//import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = 'https://tsbriguuaznlvwbnylop.supabase.co'
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzYnJpZ3V1YXpubHZ3Ym55bG9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY5MDIzOTksImV4cCI6MjA0MjQ3ODM5OX0.oKpulUfQth5hNyZVRgw_uPBnkhrcD1LP61CPmW3U-gA"
 const supabase = createClient(supabaseUrl, supabaseKey)
