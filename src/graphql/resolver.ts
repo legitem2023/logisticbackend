@@ -841,8 +841,8 @@ if (!user) {
       const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
 
       // Save images
-      const photoFile = saveBase64Image(photoUrl, `photo-${id}.jpg`);
-      const signatureFile = saveBase64Image(signatureData, `signature-${id}.png`);
+      const photoFile = await saveBase64Image(photoUrl, `photo-${id}.jpg`);
+      const signatureFile = await saveBase64Image(signatureData, `signature-${id}.png`);
 
       // Save to DB
       const record = await prisma.proofOfDelivery.create({
