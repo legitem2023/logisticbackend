@@ -1,50 +1,9 @@
-/*import fs from 'fs';
-import path from 'path';
-
-export function saveBase64Image(base64Data: string, filename: string) {
-  
-  if (!base64Data.includes(';base64,')) {
-    throw new Error('Invalid base64 string format');
-  }
-
-  const parts = base64Data.split(';base64,');
-  const base64Image = parts[1] || ''; 
-
-  const mimetype = base64Data.substring(
-    base64Data.indexOf(':') + 1,
-    base64Data.indexOf(';')
-  );
-
-  const uploadDir = path.join(process.cwd(), 'public/uploads');
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const filePath = path.join(uploadDir, filename);
-
-  
-  fs.writeFileSync(filePath, base64Image, { encoding: 'base64' });
-
-  return {
-    filename,
-    mimetype,
-    encoding: 'base64',
-    url: `/uploads/${filename}`,
-  };
-}*/
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-
-// Initialize Supabase client
-/*const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!
-);*/
-//import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = 'https://tsbriguuaznlvwbnylop.supabase.co'
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzYnJpZ3V1YXpubHZ3Ym55bG9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjY5MDIzOTksImV4cCI6MjA0MjQ3ODM5OX0.oKpulUfQth5hNyZVRgw_uPBnkhrcD1LP61CPmW3U-gA"
 const supabase = createClient(supabaseUrl, supabaseKey)
-
 
 export async function saveBase64Image(base64Data: string) {
   // Validate base64 format
