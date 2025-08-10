@@ -6,7 +6,7 @@ import { TextEncoder } from 'util';
 import { PubSub, withFilter } from "graphql-subscriptions";
 import { notifier } from '../script/script.js';
 import { saveBase64Image } from '../script/saveBase64Image.js';
-
+import { v4 as uuidv4 } from 'uuid';
 
 
 
@@ -839,10 +839,11 @@ if (!user) {
     uploadFile: async (_parent: any, { file }: any) => {
 
       const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
-
+      const photoUUID = uuidv4();
+      const signatureUUID = uuidv4();
       // Save images
-      const photoFile = await saveBase64Image(photoUrl, `photo-${id}.jpg`);
-      const signatureFile = await saveBase64Image(signatureData, `signature-${id}.png`);
+      const photoFile = await saveBase64Image(photoUrl, `photo-${photoUUID}.jpg`);
+      const signatureFile = await saveBase64Image(signatureData, `signature-${signatureUUID}.png`);
 
       // Save to DB
       const record = await prisma.proofOfDelivery.create({
