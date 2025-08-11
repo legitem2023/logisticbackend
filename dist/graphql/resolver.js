@@ -5,6 +5,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { TextEncoder } from 'util';
 import { PubSub, withFilter } from "graphql-subscriptions";
 import { saveBase64Image } from '../script/saveBase64Image.js';
+import { v4 as uuidv4 } from 'uuid';
 const prisma = new PrismaClient();
 import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
@@ -466,6 +467,49 @@ export const resolvers = {
             }
             return updated;
         },
+        markPaid: async (_, { deliveryId, riderId }) => {
+            var _a;
+            const updated = await prisma.delivery.update({
+                where: { id: deliveryId },
+                data: {
+                    paymentMethod: "Cash",
+                    paymentStatus: "Paid",
+                },
+                include: {
+                    assignedRider: true,
+                    sender: true
+                },
+            });
+            const Rider = (_a = updated.assignedRider) === null || _a === void 0 ? void 0 : _a.name;
+            const notification = {
+                id: String(Date.now()),
+                user: { id: updated.senderId, name: updated.sender.name },
+                title: "Delivery Paid",
+                message: `Delivery Paid`,
+                type: "delivery",
+                isRead: false,
+                createdAt: new Date().toISOString(),
+            };
+            await prisma.notification.create({
+                data: {
+                    userId: notification.user.id,
+                    title: notification.title,
+                    message: notification.message,
+                    type: notification.type,
+                    isRead: notification.isRead,
+                    createdAt: new Date(notification.createdAt)
+                }
+            });
+            pubsub.publish(NOTIFICATION_RECEIVED, {
+                notificationReceived: notification,
+            });
+            if (updated) {
+                return {
+                    statusText: "success",
+                };
+            }
+            return updated;
+        },
         skipDelivery: async (_, { deliveryId, riderId }) => {
             var _a;
             const updated = await prisma.delivery.update({
@@ -650,6 +694,7 @@ export const resolvers = {
                     where: { id: deliveryId },
                     data: {
                         assignedRiderId: riderId,
+                        deliveryStatus: "assigned",
                     },
                 });
                 const notification = {
@@ -750,9 +795,11 @@ export const resolvers = {
         },
         uploadFile: async (_parent, { file }) => {
             const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
+            const photoUUID = uuidv4();
+            const signatureUUID = uuidv4();
             // Save images
-            const photoFile = saveBase64Image(photoUrl, `photo-${id}.jpg`);
-            const signatureFile = saveBase64Image(signatureData, `signature-${id}.png`);
+            const photoFile = await saveBase64Image(photoUrl, `photo-${photoUUID}.jpg`);
+            const signatureFile = await saveBase64Image(signatureData, `signature-${signatureUUID}.png`);
             // Save to DB
             const record = await prisma.proofOfDelivery.create({
                 data: {
