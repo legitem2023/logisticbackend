@@ -545,6 +545,51 @@ if (!user) {
       }
   return updated
     },
+    markPaid: async (_:any, { deliveryId, riderId }:any) => {
+      const updated = await prisma.delivery.update({
+        where: { id: deliveryId },
+        data: {
+          paymentMethod: "Cash",
+          paymentStatus: "Paid",
+        },
+        include:{
+          assignedRider: true,
+          sender:true
+        },
+      })
+      const Rider = updated.assignedRider?.name;
+
+      const notification = {
+        id: String(Date.now()),
+        user: { id: updated.senderId, name: updated.sender.name },
+        title: "Delivery Paid",
+        message: `Delivery Paid`,
+        type: "delivery",
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      await prisma.notification.create({
+        data: {
+          userId: notification.user.id,
+          title: notification.title,
+          message: notification.message,
+          type: notification.type,
+          isRead: notification.isRead,
+          createdAt: new Date(notification.createdAt)
+      }});
+
+      pubsub.publish(NOTIFICATION_RECEIVED, {
+        notificationReceived: notification,
+      });
+      
+      if(updated){
+        return {
+          statusText: "success",
+        }
+      }
+      return updated
+    },
     skipDelivery: async (_:any, { deliveryId, riderId }:any) => {
       const updated = await prisma.delivery.update({
         where: { id: deliveryId },
