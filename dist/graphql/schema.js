@@ -84,6 +84,7 @@ type Delivery {
   baseRate: Float
   perKmRate: Float
   distance: Float
+  paymentCode: String
 }
 
 # Delivery Status Log
