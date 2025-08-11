@@ -253,6 +253,7 @@ type Mutation {
   createPackage(deliveryId: String!,packageType:String,weight:Float,dimensions:String,specialInstructions:String):Result
   readNotification(notificationId: String!): Result
   deleteNotification(notificationId: String!): Result
+  markPaid(deliveryId: String!, riderId: String!): Result
 }
 
 type Subscription {
