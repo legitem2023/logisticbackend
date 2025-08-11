@@ -733,6 +733,7 @@ if (!user) {
           where: { id: deliveryId },
           data: {
             assignedRiderId: riderId,
+            deliveryStatus: "assigned",
           },
         });
 
