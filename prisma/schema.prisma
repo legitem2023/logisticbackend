@@ -82,7 +82,7 @@ model Delivery {
   actualDeliveryTime   DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-  
+  paymentCode String?
   deliveryType         String? // e.g., "standard", "express"
   paymentStatus        String? // e.g., "unpaid", "paid", "refunded"
   paymentMethod        String? // e.g., "cash", "credit_card", "gcash"

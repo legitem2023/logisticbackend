@@ -467,11 +467,12 @@ export const resolvers = {
             }
             return updated;
         },
-        markPaid: async (_, { deliveryId, riderId }) => {
+        markPaid: async (_, { deliveryId, riderId, code }) => {
             var _a;
             const updated = await prisma.delivery.update({
                 where: { id: deliveryId },
                 data: {
+                    paymentCode: code,
                     paymentMethod: "Cash",
                     paymentStatus: "Paid",
                 },

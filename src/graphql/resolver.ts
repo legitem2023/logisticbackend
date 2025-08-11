@@ -545,10 +545,11 @@ if (!user) {
       }
   return updated
     },
-    markPaid: async (_:any, { deliveryId, riderId }:any) => {
+    markPaid: async (_:any, { deliveryId, riderId, code }:any) => {
       const updated = await prisma.delivery.update({
         where: { id: deliveryId },
         data: {
+          paymentCode: code,
           paymentMethod: "Cash",
           paymentStatus: "Paid",
         },
