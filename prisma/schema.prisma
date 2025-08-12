@@ -183,8 +183,7 @@ model Delivery {
   distance             Float?
 
 
-  walletTransaction    Transaction? @relation(fields: [walletTransactionId], references: [id])
-  walletTransactionId  String?     @unique @db.ObjectId
+  walletTransaction    Transaction?
   statusLogs           DeliveryStatusLog[]
   proofOfDelivery      ProofOfDelivery[]
   packages             Package[]
