@@ -64,9 +64,9 @@ model Transaction {
   type          TransactionType
   amount        Float
   description   String
-  status        TransactionStatus @default(COMPLETED)
-  referenceId   String?         // For payment gateway references
-  paymentMethod PaymentMethod?  // e.g., "credit_card", "gcash", "wallet"
+  status        TransactionStatus @default(COMPLETED) // ✅ Correct enum default
+  referenceId   String?
+  paymentMethod PaymentMethod?
   createdAt     DateTime        @default(now())
 
   @@index([walletId])
