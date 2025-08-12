@@ -49,7 +49,7 @@ model Wallet {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  @@index([userId])
+  
 }
 
 model Transaction {
@@ -66,7 +66,6 @@ model Transaction {
   paymentMethod PaymentMethod?
   createdAt     DateTime        @default(now())
 
-  @@index([walletId])
 }
 
 model Security {
