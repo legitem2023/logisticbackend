@@ -24,6 +24,13 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   role String?
+
+  wallet        Wallet?         @relation(fields: [walletId], references: [id])
+  walletId      String?         @unique @db.ObjectId
+  security      Security?       @relation(fields: [securityId], references: [id])
+  securityId    String?         @unique @db.ObjectId
+  promotions    Promotion[]     @relation("UserPromotions")
+
   // Relations
   locations       LocationTracking[]
   deliveries      Delivery[] @relation("AssignedDeliveries")
@@ -33,6 +40,88 @@ model User {
   notifications   Notification[]
   rating Float?  @default(4.0)
 }
+
+// New wallet models
+model Wallet {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String          @db.ObjectId
+  user          User            @relation(fields: [userId], references: [id])
+  balance       Float           @default(0.0)
+  currency      String          @default("PHP")
+  transactions  Transaction[]   @relation("WalletTransactions")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([userId])
+}
+
+model Transaction {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  walletId      String          @db.ObjectId
+  wallet        Wallet          @relation("WalletTransactions", fields: [walletId], references: [id])
+  deliveryId    String?         @db.ObjectId
+  delivery      Delivery?       @relation(fields: [deliveryId], references: [id])
+  type          TransactionType
+  amount        Float
+  description   String
+  status        TransactionStatus @default("completed")
+  referenceId   String?         // For payment gateway references
+  paymentMethod PaymentMethod?  // e.g., "credit_card", "gcash", "wallet"
+  createdAt     DateTime        @default(now())
+
+  @@index([walletId])
+}
+
+model Security {
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String      @unique @db.ObjectId
+  user              User        @relation(fields: [userId], references: [id])
+  transactionPin    String?     // Hashed PIN
+  biometricEnabled  Boolean     @default(false)
+  dailyLimit        Float?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Promotion {
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  validUntil  DateTime
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  users       User[]            @relation("UserPromotions")
+}
+
+// New enums for wallet system
+enum TransactionType {
+  TOPUP
+  PAYMENT
+  REFUND
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  GCASH
+  PAYMAYA
+  BANK_TRANSFER
+  WALLET
+}
+
+
 
 model VehicleType {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -94,6 +183,10 @@ model Delivery {
   baseRate             Float?
   perKmRate            Float?
   distance             Float?
+
+
+  walletTransaction    Transaction? @relation(fields: [walletTransactionId], references: [id])
+  walletTransactionId  String?     @unique @db.ObjectId
   statusLogs           DeliveryStatusLog[]
   proofOfDelivery      ProofOfDelivery[]
   packages             Package[]
