@@ -23,13 +23,11 @@ model User {
   lastUpdatedAt   DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  role String?
+  role            String?
 
-  wallet        Wallet?         @relation(fields: [walletId], references: [id])
-  walletId      String?         @unique @db.ObjectId
-  security      Security?       @relation(fields: [securityId], references: [id])
-  securityId    String?         @unique @db.ObjectId
-  promotions    Promotion[]     @relation("UserPromotions")
+  wallet          Wallet?         @relation("UserWallet")
+  security        Security?       @relation("UserSecurity")
+  promotions      UserPromotion[] // Changed to explicit join model
 
   // Relations
   locations       LocationTracking[]
@@ -38,14 +36,13 @@ model User {
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
-  rating Float?  @default(4.0)
+  rating          Float?  @default(4.0)
 }
 
-// New wallet models
 model Wallet {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String          @db.ObjectId
-  user          User         
+  userId        String          @unique @db.ObjectId
+  user          User            @relation("UserWallet", fields: [userId], references: [id])
   balance       Float           @default(0.0)
   currency      String          @default("PHP")
   transactions  Transaction[]   @relation("WalletTransactions")
@@ -65,8 +62,8 @@ model Transaction {
   amount        Float
   description   String
   status        TransactionStatus @default(COMPLETED)
-  referenceId   String?         // For payment gateway references
-  paymentMethod PaymentMethod?  // e.g., "credit_card", "gcash", "wallet"
+  referenceId   String?
+  paymentMethod PaymentMethod?
   createdAt     DateTime        @default(now())
 
   @@index([walletId])
@@ -75,8 +72,8 @@ model Transaction {
 model Security {
   id                String      @id @default(auto()) @map("_id") @db.ObjectId
   userId            String      @unique @db.ObjectId
-  user              User       
-  transactionPin    String?     // Hashed PIN
+  user              User        @relation("UserSecurity", fields: [userId], references: [id])
+  transactionPin    String?
   biometricEnabled  Boolean     @default(false)
   dailyLimit        Float?
   createdAt         DateTime    @default(now())
@@ -91,7 +88,18 @@ model Promotion {
   isActive    Boolean           @default(true)
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-  users       User[]            @relation("UserPromotions")
+  users       UserPromotion[] // Changed to explicit join model
+}
+
+model UserPromotion {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String     @db.ObjectId
+  promotionId  String     @db.ObjectId
+
+  user         User       @relation(fields: [userId], references: [id])
+  promotion    Promotion  @relation(fields: [promotionId], references: [id])
+
+  @@unique([userId, promotionId])
 }
 
 // New enums for wallet system
@@ -120,8 +128,6 @@ enum PaymentMethod {
   BANK_TRANSFER
   WALLET
 }
-
-
 
 model VehicleType {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -171,10 +177,10 @@ model Delivery {
   actualDeliveryTime   DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-  paymentCode String?
-  deliveryType         String? // e.g., "standard", "express"
-  paymentStatus        String? // e.g., "unpaid", "paid", "refunded"
-  paymentMethod        String? // e.g., "cash", "credit_card", "gcash"
+  paymentCode          String?
+  deliveryType         String?
+  paymentStatus        String?
+  paymentMethod        String?
   deliveryFee          Float?
   cancellationReason   String?
   failedAttemptReason  String?
@@ -183,7 +189,6 @@ model Delivery {
   baseRate             Float?
   perKmRate            Float?
   distance             Float?
-
 
   walletTransaction    Transaction? @relation(fields: [walletTransactionId], references: [id])
   walletTransactionId  String?     @unique @db.ObjectId
@@ -256,6 +261,6 @@ model Notification {
 
 model TrackingCounter {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  date          DateTime @unique
-  counter       Int
+  date      DateTime @unique
+  counter   Int
 }
