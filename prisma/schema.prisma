@@ -60,7 +60,7 @@ model Transaction {
   walletId      String          @db.ObjectId
   wallet        Wallet          @relation("WalletTransactions", fields: [walletId], references: [id])
   deliveryId    String?         @db.ObjectId
-  delivery      Delivery?       @relation(fields: [deliveryId], references: [id])
+  delivery      Delivery? 
   type          TransactionType
   amount        Float
   description   String
