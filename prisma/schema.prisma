@@ -26,9 +26,7 @@ model User {
   role String?
 
   wallet        Wallet?
-  walletId      String?         @unique @db.ObjectId
   security      Security? 
-  securityId    String?         @unique @db.ObjectId
   promotions    Promotion[]     @relation("UserPromotions")
 
   // Relations
