@@ -64,7 +64,7 @@ model Transaction {
   type          TransactionType
   amount        Float
   description   String
-  status        TransactionStatus @default("completed")
+  status        TransactionStatus @default(COMPLETED)
   referenceId   String?         // For payment gateway references
   paymentMethod PaymentMethod?  // e.g., "credit_card", "gcash", "wallet"
   createdAt     DateTime        @default(now())
