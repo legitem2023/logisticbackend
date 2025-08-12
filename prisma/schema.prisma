@@ -27,7 +27,7 @@ model User {
 
   wallet        Wallet?
   security      Security? 
-  promotions    Promotion[] @relation("UserPromotions")
+  promotions    Promotion[]
 
   // Relations
   locations       LocationTracking[]
@@ -89,7 +89,7 @@ model Promotion {
   isActive    Boolean           @default(true)
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-  users       User[]            @relation("UserPromotions")
+  users       User[]
 }
 
 // New enums for wallet system
