@@ -23,42 +23,40 @@ model User {
   lastUpdatedAt   DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  role String?
+  role            String?
+  rating          Float?   @default(4.0)
 
   // Relations
-  wallet        Wallet?         @relation
-  walletId      String?         @unique @db.ObjectId
-  security      Security?       @relation
-  securityId    String?         @unique @db.ObjectId
-  promotions    Promotion[]     @relation("UserPromotions")
+  wallet          Wallet?         @relation(fields: [walletId], references: [id])
+  walletId        String?         @unique @db.ObjectId
+  security        Security?       @relation(fields: [securityId], references: [id])
+  securityId      String?         @unique @db.ObjectId
+  promotions      Promotion[]     @relation("UserPromotions")
   locations       LocationTracking[]
-  deliveries      Delivery[] @relation("AssignedDeliveries")
-  sentDeliveries  Delivery[] @relation("SenderDeliveries")
+  deliveries      Delivery[]      @relation("AssignedDeliveries")
+  sentDeliveries  Delivery[]      @relation("SenderDeliveries")
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
-  rating Float?  @default(4.0)
 }
 
 model Wallet {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String          @db.ObjectId
   user          User            @relation(fields: [userId], references: [id])
+  userId        String          @unique @db.ObjectId
   balance       Float           @default(0.0)
   currency      String          @default("PHP")
   transactions  Transaction[]   @relation("WalletTransactions")
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
-
-  @@index([userId])
 }
 
 model Transaction {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  walletId      String          @db.ObjectId
   wallet        Wallet          @relation("WalletTransactions", fields: [walletId], references: [id])
-  deliveryId    String?         @db.ObjectId
+  walletId      String          @db.ObjectId
   delivery      Delivery?       @relation(fields: [deliveryId], references: [id])
+  deliveryId    String?         @db.ObjectId
   type          TransactionType
   amount        Float
   description   String
@@ -72,8 +70,8 @@ model Transaction {
 
 model Security {
   id                String      @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String      @unique @db.ObjectId
   user              User        @relation(fields: [userId], references: [id])
+  userId            String      @unique @db.ObjectId
   transactionPin    String?
   biometricEnabled  Boolean     @default(false)
   dailyLimit        Float?
@@ -135,8 +133,8 @@ model VehicleType {
 
 model LocationTracking {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       String   @db.ObjectId
   user         User     @relation(fields: [userId], references: [id])
+  userId       String   @db.ObjectId
   latitude     Float
   longitude    Float
   speed        Float?
@@ -149,8 +147,8 @@ model LocationTracking {
 model Delivery {
   id                   String   @id @default(auto()) @map("_id") @db.ObjectId
   trackingNumber       String   @unique
-  senderId             String   @db.ObjectId
   sender               User     @relation("SenderDeliveries", fields: [senderId], references: [id])
+  senderId             String   @db.ObjectId
   recipientName        String
   recipientPhone       String
   pickupAddress        String
@@ -159,14 +157,14 @@ model Delivery {
   dropoffAddress       String
   dropoffLatitude      Float
   dropoffLongitude     Float
-  assignedRiderId      String?  @db.ObjectId
   assignedRider        User?    @relation("AssignedDeliveries", fields: [assignedRiderId], references: [id])
+  assignedRiderId      String?  @db.ObjectId
   deliveryStatus       String   @default("pending")
   estimatedDeliveryTime DateTime?
   actualDeliveryTime   DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-  paymentCode String?
+  paymentCode          String?
   deliveryType         String?
   paymentStatus        String?
   paymentMethod        String?
@@ -190,26 +188,26 @@ model Delivery {
 
 model SkippedBy {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  deliveryId String   @db.ObjectId
   delivery   Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId String   @db.ObjectId
   riderId    String?  @db.ObjectId
 }
 
 model DeliveryStatusLog {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  deliveryId  String   @db.ObjectId
   delivery    Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId  String   @db.ObjectId
   status      String
-  updatedById String   @db.ObjectId
   updatedBy   User     @relation(fields: [updatedById], references: [id])
+  updatedById String   @db.ObjectId
   remarks     String?
   timestamp   DateTime @default(now())
 }
 
 model ProofOfDelivery {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  deliveryId    String   @unique @db.ObjectId
   delivery      Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId    String   @unique @db.ObjectId
   photoUrl      String?
   signatureData String?
   receivedBy    String
@@ -218,10 +216,10 @@ model ProofOfDelivery {
 
 model RouteHistory {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  riderId    String   @db.ObjectId
   rider      User     @relation(fields: [riderId], references: [id])
-  deliveryId String?  @db.ObjectId
+  riderId    String   @db.ObjectId
   delivery   Delivery? @relation(fields: [deliveryId], references: [id])
+  deliveryId String?  @db.ObjectId
   latitude   Float
   longitude  Float
   recordedAt DateTime @default(now())
@@ -229,8 +227,8 @@ model RouteHistory {
 
 model Package {
   id                  String   @id @default(auto()) @map("_id") @db.ObjectId
-  deliveryId          String   @db.ObjectId
   delivery            Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId          String   @db.ObjectId
   packageType         String
   weight              Float?
   dimensions          String?
@@ -239,8 +237,8 @@ model Package {
 
 model Notification {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.ObjectId
   title     String
   message   String
   type      String
