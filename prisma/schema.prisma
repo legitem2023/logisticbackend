@@ -27,7 +27,7 @@ model User {
 
   wallet        Wallet?
   security      Security? 
-  promotions    Promotion[]     @relation("UserPromotions")
+  promotions    Promotion?
 
   // Relations
   locations       LocationTracking[]
