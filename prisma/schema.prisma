@@ -41,6 +41,230 @@ model User {
   rating Float?  @default(4.0)
 }
 
+// Fixed Wallet model: added @unique to userId
+model Wallet {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String          @unique @db.ObjectId
+  user          User            @relation(fields: [userId], references: [id])
+  balance       Float           @default(0.0)
+  currency      String          @default("PHP")
+  transactions  Transaction[]   @relation("WalletTransactions")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([userId])
+}
+
+model Transaction {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  walletId      String          @db.ObjectId
+  wallet        Wallet          @relation("WalletTransactions", fields: [walletId], references: [id])
+  deliveryId    String?         @db.ObjectId
+  delivery      Delivery?       @relation(fields: [deliveryId], references: [id])
+  type          TransactionType
+  amount        Float
+  description   String
+  status        TransactionStatus @default("completed")
+  referenceId   String?         // For payment gateway references
+  paymentMethod PaymentMethod?  // e.g., "credit_card", "gcash", "wallet"
+  createdAt     DateTime        @default(now())
+
+  @@index([walletId])
+}
+
+model Security {
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String      @unique @db.ObjectId
+  user              User        @relation(fields: [userId], references: [id])
+  transactionPin    String?     // Hashed PIN
+  biometricEnabled  Boolean     @default(false)
+  dailyLimit        Float?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model Promotion {
+  id          String            @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  validUntil  DateTime
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  users       User[]            @relation("UserPromotions")
+}
+
+// New enums for wallet system
+enum TransactionType {
+  TOPUP
+  PAYMENT
+  REFUND
+  TRANSFER
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  GCASH
+  PAYMAYA
+  BANK_TRANSFER
+  WALLET
+}
+
+
+
+model VehicleType {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String   @unique
+  maxCapacityKg Float?
+  maxVolumeM3   Float?
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  icon          String?
+  cost          Float?
+  perKmRate     Float?
+  rushTimeAdd   Float?
+  users         User[]
+}
+
+model LocationTracking {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  user         User     @relation(fields: [userId], references: [id])
+  latitude     Float
+  longitude    Float
+  speed        Float?
+  heading      Float?
+  accuracy     Float?
+  batteryLevel Float?
+  timestamp    DateTime @default(now())
+}
+
+model Delivery {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  trackingNumber       String   @unique
+  senderId             String   @db.ObjectId
+  sender               User     @relation("SenderDeliveries", fields: [senderId], references: [id])
+  recipientName        String
+  recipientPhone       String
+  pickupAddress        String
+  pickupLatitude       Float
+  pickupLongitude      Float
+  dropoffAddress       String
+  dropoffLatitude      Float
+  dropoffLongitude     Float
+  assignedRiderId      String?  @db.ObjectId
+  assignedRider        User?    @relation("AssignedDeliveries", fields: [assignedRiderId], references: [id])
+  deliveryStatus       String   @default("pending")
+  estimatedDeliveryTime DateTime?
+  actualDeliveryTime   DateTime?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  paymentCode String?
+  deliveryType         String? // e.g., "standard", "express"
+  paymentStatus        String? // e.g., "unpaid", "paid", "refunded"
+  paymentMethod        String? // e.g., "cash", "credit_card", "gcash"
+  deliveryFee          Float?
+  cancellationReason   String?
+  failedAttemptReason  String?
+  currentLatitude      Float?
+  currentLongitude     Float?
+  baseRate             Float?
+  perKmRate            Float?
+  distance             Float?
+
+
+  walletTransaction    Transaction? @relation(fields: [walletTransactionId], references: [id])
+  walletTransactionId  String?     @unique @db.ObjectId
+  statusLogs           DeliveryStatusLog[]
+  proofOfDelivery      ProofOfDelivery[]
+  packages             Package[]
+  routeHistory         RouteHistory[]
+  rejection            SkippedBy[]
+}
+
+model SkippedBy {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId String   @db.ObjectId
+  delivery   Delivery @relation(fields: [deliveryId], references: [id])
+  riderId    String?  @db.ObjectId
+}
+
+model DeliveryStatusLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId  String   @db.ObjectId
+  delivery    Delivery @relation(fields: [deliveryId], references: [id])
+  status      String
+  updatedById String   @db.ObjectId
+  updatedBy   User     @relation(fields: [updatedById], references: [id])
+  remarks     String?
+  timestamp   DateTime @default(now())
+}
+
+model ProofOfDelivery {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId    String   @unique @db.ObjectId
+  delivery      Delivery @relation(fields: [deliveryId], references: [id])
+  photoUrl      String?
+  signatureData String?
+  receivedBy    String
+  receivedAt    DateTime @default(now())
+}
+
+model RouteHistory {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  riderId    String   @db.ObjectId
+  rider      User     @relation(fields: [riderId], references: [id])
+  deliveryId String?  @db.ObjectId
+  delivery   Delivery? @relation(fields: [deliveryId], references: [id])
+  latitude   Float
+  longitude  Float
+  recordedAt DateTime @default(now())
+}
+
+model Package {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId          String   @db.ObjectId
+  delivery            Delivery @relation(fields: [deliveryId], references: [id])
+  packageType         String
+  weight              Float?
+  dimensions          String?
+  specialInstructions String?
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model TrackingCounter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  date          DateTime @unique
+  counter       Int
+}  sentDeliveries  Delivery[] @relation("SenderDeliveries")
+  statusLogs      DeliveryStatusLog[]
+  routeHistory    RouteHistory[]
+  notifications   Notification[]
+  rating Float?  @default(4.0)
+}
+
 // New wallet models
 model Wallet {
   id            String          @id @default(auto()) @map("_id") @db.ObjectId
