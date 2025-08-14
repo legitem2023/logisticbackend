@@ -143,6 +143,77 @@ type Notification {
   createdAt: String
 }
 
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  GCASH
+  PAYMAYA
+  BANK_TRANSFER
+  WALLET
+}
+
+type Transaction {
+  id: String!
+  walletId: String
+  wallet: Wallet
+  deliveryId: String
+  delivery: Delivery
+  type: String!
+  amount: Float!
+  description: String!
+  status: TransactionStatus!
+  referenceId: String
+  paymentMethod: PaymentMethod
+  createdAt: String!
+}
+
+type Wallet {
+  id: String!
+  user: User!
+  balance: Float!
+  currency: String!
+  transactions: [Transaction]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type GCashPaymentResponse {
+  paymentId: String!
+  gcashPaymentId: String!
+  qrCodeUrl: String
+  checkoutUrl: String!
+  status: TransactionStatus!
+  referenceId: String!
+}
+
+input InitiateGCashPaymentInput {
+  deliveryId: String!
+  amount: Float!
+  description: String
+}
+
+input VerifyGCashPaymentInput {
+  paymentId: String!
+}
+
+input ProcessGCashWebhookInput {
+  paymentId: String!
+  referenceId: String!
+  status: TransactionStatus!
+}
+
+
+
+
 type Query {
   getUsers: [User]
   getUser(id: Int): User
@@ -153,6 +224,9 @@ type Query {
   getVehicleTypes: [VehicleType]
   getRiders: [User]
   getNotifications(id:String): [Notification]
+  getTransaction(paymentId: String!): Transaction
+  getWallet(userId: String!): Wallet
+  getTransactionsByUser(userId: String!): [Transaction]!
 }
 
 type Result {
@@ -237,6 +311,27 @@ input ProofOfDeliveryInput {
 }
 
 type Mutation {
+
+  # GCash Payments
+  initiateGCashPayment(input: InitiateGCashPaymentInput!): GCashPaymentResponse!
+  verifyGCashPayment(input: VerifyGCashPaymentInput!): Transaction!
+  processGCashWebhook(input: ProcessGCashWebhookInput!): Boolean!
+  
+  # Wallet Operations
+  createWallet(userId: String!): Wallet!
+  topUpWallet(walletId: String!, amount: Float!, method: PaymentMethod!): Transaction!
+  transferWalletToWallet(
+    senderWalletId: String!, 
+    receiverWalletId: String!, 
+    amount: Float!,
+    pin: String!
+  ): Transaction!
+  
+  # Delivery Payment Updates
+  markDeliveryAsPaid(deliveryId: String!, method: PaymentMethod!): Delivery!
+  refundDeliveryPayment(deliveryId: String!): Transaction!
+
+
   uploadFile(file: ProofOfDeliveryInput!): Result
   assignRider(deliveryId: String!, riderId: String!): Result
   createDelivery(input: CreateDeliveryInput):Result
