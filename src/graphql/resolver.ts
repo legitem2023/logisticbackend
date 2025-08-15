@@ -481,14 +481,13 @@ locationTracking: async (_: any, args: any) => {
 
     // Fetch user's last update time
     const user = await prisma.user.findUnique({
-      where: { id: userID },
-      select: { lastUpdatedAt: true, currentLatitude: true, currentLongitude: true, status: true }
+      where: { id: userID }
     });
 
     const now = new Date();
     const shouldUpdate =
       !user?.lastUpdatedAt ||
-      (now.getTime() - new Date(user.lastUpdatedAt).getTime()) >= 60_000; // 1 min
+      (now.getTime() - new Date(user?.lastUpdatedAt).getTime()) >= 60_000; // 1 min
 
     if (shouldUpdate) {
       // Determine status based on rules
@@ -500,7 +499,7 @@ locationTracking: async (_: any, args: any) => {
         // Keep busy status until task completion
         newStatus = "busy";
       } else {
-        const idleTime = now.getTime() - new Date(user.lastUpdatedAt || now).getTime();
+        const idleTime = now.getTime() - new Date(user?.lastUpdatedAt || now).getTime();
         if (idleTime >= 15 * 60_000) { // 15 min
           newStatus = "inactive";
         } else {
