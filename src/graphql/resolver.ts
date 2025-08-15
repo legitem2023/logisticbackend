@@ -280,8 +280,8 @@ export const resolvers = {
 
       const UUID = uuidv4();
       // Save images
-      const profilePhotoFile = await saveBase64Image(photoUrl, `photo-${UUID}.jpg`);
-      const licenseFile = await saveBase64Image(signatureData, `license-${UUID}.png`);
+      const profilePhotoFile = await saveBase64Image(photo, `photo-${UUID}.jpg`);
+      const licenseFile = await saveBase64Image(license, `license-${UUID}.jpg`);
 
         const passwordHash = await encryptPassword(password, 10);
 
@@ -295,6 +295,8 @@ export const resolvers = {
             role: 'Rider',
             vehicleTypeId,
             status: 'AVAILABLE',
+            image:profilePhotoFile.url,
+            license:licenseFile.url,
             createdAt: new Date(),
             updatedAt: new Date()
           },
