@@ -273,9 +273,15 @@ export const resolvers = {
           phoneNumber,
           vehicleTypeId,
           licensePlate,
-          password // Expect plain text password here
+          password, // Expect plain text password here
+          photo,
+          license
         } = args.input;
 
+      const UUID = uuidv4();
+      // Save images
+      const profilePhotoFile = await saveBase64Image(photoUrl, `photo-${UUID}.jpg`);
+      const licenseFile = await saveBase64Image(signatureData, `license-${UUID}.png`);
 
         const passwordHash = await encryptPassword(password, 10);
 
