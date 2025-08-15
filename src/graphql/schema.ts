@@ -261,6 +261,8 @@ input CreateRiderInput {
   vehicleTypeId: String
   licensePlate: String
   password: String
+  photo: String
+  license: String
 }
 
 input LoginInput {
