@@ -1,9 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { CronJob } from 'cron';
-import { pubsub } from '../graphql/pubsub.js'; // adjust import path
 
+import { PubSub, withFilter } from "graphql-subscriptions";
 const prisma = new PrismaClient();
-
+export const pubsub = new PubSub();
 export const markInactiveUsers = new CronJob(
   '* * * * *', // every minute
   async () => {
