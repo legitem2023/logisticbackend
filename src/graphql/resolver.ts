@@ -25,17 +25,8 @@ const NOTIFICATION_RECEIVED:any = "";
 export const resolvers = {
   Query: {
     getUsers: async (_: any, args:any) => {
-      return await prisma.user.findMany({
-        include: {
-          sender:true,
-          assignedRider: true, // Include full rider info in the response
-          packages:true,
-          proofOfDelivery:true
-        },        
-        orderBy: {
-          createdAt: 'desc',
-        }
-      })},
+      return await prisma.user.findMany();
+    },
     getUser: async (_: any, args: { id: string }) => { 
       return await prisma.user.findUnique({ where: { id: args.id } })},
     getDeliveries: async (_: any, args:any) => { 
