@@ -18,7 +18,7 @@ import { typeDefs } from './graphql/schema.js';
 import { resolvers } from './graphql/resolver.js';
 import { CronJob } from 'cron';
 import { reassignStaleDeliveries } from './script/reassignStaleDeliveries.js';
-
+import { markInactiveUsers } from './script/markInactiveUsers.js';
 dotenv.config();
 
 type MyContext = {
@@ -107,7 +107,7 @@ const reassignmentJob = new CronJob(
   true, // start immediately
   'UTC' // timezone
 );
-
+markInactiveUsers.start();
 
 
   
