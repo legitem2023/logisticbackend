@@ -72,7 +72,7 @@ export const markInactiveUsers = new CronJob(
         where: {
           lastUpdatedAt: { gte: new Date(now.getTime() - 15 * 60_000) }, // recent update
           deliveries: {
-            some: { deliveryStatus: { in: ['pending', 'in_progress'] } }
+            some: { deliveryStatus: { in: ['Pending', 'in_transit','assigned'] } }
           },
           status: { not: 'busy' }
         },
