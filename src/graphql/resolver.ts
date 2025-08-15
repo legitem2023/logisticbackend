@@ -482,7 +482,7 @@ locationTracking: async (_: any, args: any) => {
     // Fetch user's last update time
     const user = await prisma.user.findUnique({
       where: { id: userID },
-      select: { lastUpdatedAt: true, currentLatitude: true, currentLongitude: true }
+      select: { lastUpdatedAt: true, currentLatitude: true, currentLongitude: true, status: true }
     });
 
     const now = new Date();
