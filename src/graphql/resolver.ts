@@ -451,6 +451,7 @@ if (!user) {
       token
     };
     },
+    /*
     locationTracking: async (_: any, args: any) => {
      try {
        
@@ -473,8 +474,65 @@ if (!user) {
     throw new Error('Failed to update location');
   }
 },
+*/
+locationTracking: async (_: any, args: any) => {
+  try {
+    const { userID, latitude, longitude } = args.input;
 
+    // Fetch user's last update time
+    const user = await prisma.user.findUnique({
+      where: { id: userID },
+      select: { lastUpdatedAt: true, currentLatitude: true, currentLongitude: true }
+    });
 
+    const now = new Date();
+    const shouldUpdate =
+      !user?.lastUpdatedAt ||
+      (now.getTime() - new Date(user.lastUpdatedAt).getTime()) >= 60_000; // 1 min
+
+    if (shouldUpdate) {
+      // Determine status based on rules
+      let newStatus = user?.status || "available";
+
+      if (!latitude || !longitude) {
+        newStatus = "offline";
+      } else if (user?.status === "busy") {
+        // Keep busy status until task completion
+        newStatus = "busy";
+      } else {
+        const idleTime = now.getTime() - new Date(user.lastUpdatedAt || now).getTime();
+        if (idleTime >= 15 * 60_000) { // 15 min
+          newStatus = "inactive";
+        } else {
+          newStatus = "available";
+        }
+      }
+
+      // Update location + status in DB
+      await prisma.user.update({
+        where: { id: userID },
+        data: {
+          currentLatitude: latitude,
+          currentLongitude: longitude,
+          lastUpdatedAt: now,
+          status: newStatus,
+        },
+      });
+
+      console.log(`Updated ${userID}: ${latitude}, ${longitude}, status=${newStatus}`);
+    } else {
+      console.log(`Skipped DB update for ${userID} (last update < 1 min ago)`);
+    }
+
+    // Always publish real-time updates
+    pubsub.publish("LOCATION_TRACKING", { LocationTracking: args.input });
+
+    return args.input;
+  } catch (error) {
+    console.log("Error updating location:", error);
+    throw new Error("Failed to update location");
+  }
+},
     
     sendNotification: async(_:any, { userID, title, message, type }:any) => {
       const notification = {
