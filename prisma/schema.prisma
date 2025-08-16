@@ -33,7 +33,9 @@ model User {
   locations       LocationTracking[]
   deliveries      Delivery[] @relation("AssignedDeliveries")
   sentDeliveries  Delivery[] @relation("SenderDeliveries")
-  proofOfPickups    ProofOfPickup[]   @relation("UserPickupProofs")
+
+  proofOfPickups  ProofOfPickup[] @relation("UserPickupProofs")
+  
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
@@ -208,8 +210,8 @@ model ProofOfPickup {
   pickupLatitude  Float?                            // GPS latitude
   pickupLongitude Float?                            // GPS longitude
 
-  pickupById      String?  @db.ObjectId             // rider/driver ID
-  pickupBy        User?    @relation(fields: [pickupById], references: [id])
+  pickupById      String?  @db.ObjectId
+  pickupBy        User?    @relation("UserPickupProofs", fields: [pickupById], references: [id])  // 👈 MATCH NAME
 
   customerName    String?                           // who handed over
   customerSignature String?                         // base64 / image url of signature
