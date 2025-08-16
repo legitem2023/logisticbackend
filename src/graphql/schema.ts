@@ -338,6 +338,7 @@ input ProofOfDeliveryInput {
 
 input ProofOfPickup {
   id: String
+  riderId: String
   pickupDateTime: String
   pickupAddress: String
   pickupLatitude: Float
