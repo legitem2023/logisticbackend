@@ -36,6 +36,7 @@ type User {
   createdAt: String
   updatedAt: String
   role: String
+  license: String
 }
 
 # Location Tracking
