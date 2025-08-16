@@ -115,21 +115,21 @@ type ProofOfDelivery {
 type ProofOfPickup {
   id: String!
   delivery: Delivery!
-  pickupDateTime  String
-  pickupAddress   String
-  pickupLatitude  Float
-  pickupLongitude Float
-  pickupBy        User!
-  customerName    String
-  customerSignature String
-  proofPhotoUrl   String
-  packageCondition String
-  numberOfPackages Int
-  otpCode         String
-  remarks         String
-  status          String   #picked_up, failed, pending
-  createdAt       String
-  updatedAt       String
+  pickupDateTime: String
+  pickupAddress: String
+  pickupLatitude: Float
+  pickupLongitude: Float
+  pickupBy: User!
+  customerName: String
+  customerSignature: String
+  proofPhotoUrl: String
+  packageCondition: String
+  numberOfPackages: Int
+  otpCode: String
+  remarks: String
+  status:  String   #picked_up, failed, pending
+  createdAt: String
+  updatedAt: String
 }
 
 
@@ -336,8 +336,22 @@ input ProofOfDeliveryInput {
   signatureData: String!
 }
 
-type Mutation {
+input ProofOfPickup {
+  pickupDateTime: String
+  pickupAddress: String
+  pickupLatitude: Float
+  pickupLongitude: Float
+  customerName: String
+  customerSignature: String
+  proofPhotoUrl: String
+  packageCondition: String
+  numberOfPackages: Int
+  otpCode: String
+  remarks: String
+}
 
+type Mutation {
+  insertPickupProof(input:ProofOfPickup):Result
   # GCash Payments
   initiateGCashPayment(input: InitiateGCashPaymentInput!): GCashPaymentResponse!
   verifyGCashPayment(input: VerifyGCashPaymentInput!): Transaction!
