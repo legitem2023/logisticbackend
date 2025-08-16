@@ -172,6 +172,7 @@ model Delivery {
 
   walletTransaction    Transaction?
   statusLogs           DeliveryStatusLog[]
+  proofOfPickup        ProofOfPickup[]
   proofOfDelivery      ProofOfDelivery[]
   packages             Package[]
   routeHistory         RouteHistory[]
@@ -194,6 +195,33 @@ model DeliveryStatusLog {
   updatedBy   User     @relation(fields: [updatedById], references: [id])
   remarks     String?
   timestamp   DateTime @default(now())
+}
+
+model ProofOfPickup {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  deliveryId      String   @unique @db.ObjectId
+  delivery        Delivery @relation(fields: [deliveryId], references: [id])
+
+  pickupDateTime  DateTime @default(now())          // when pickup occurred
+  pickupAddress   String?                           // human-readable location
+  pickupLatitude  Float?                            // GPS latitude
+  pickupLongitude Float?                            // GPS longitude
+
+  pickupById      String?  @db.ObjectId             // rider/driver ID
+  pickupBy        User?    @relation(fields: [pickupById], references: [id])
+
+  customerName    String?                           // who handed over
+  customerSignature String?                         // base64 / image url of signature
+  proofPhotoUrl   String?                           // photo of package
+  packageCondition String?                          // Good/Damaged/Other
+  numberOfPackages Int?                             // quantity collected
+  otpCode         String?                           // optional one-time PIN
+
+  remarks         String?                           // extra notes
+  status          String   @default("picked_up")    // picked_up, failed, pending
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model ProofOfDelivery {
