@@ -991,7 +991,7 @@ locationTracking: async (_: any, args: any) => {
             } = input
       const photoUUID = uuidv4();
       const PhotoURL = await saveBase64Image(proofPhotoUrl, `proofPickUp-${photoUUID}.jpg`);
-      const customerSignature = await saveBase64Image(customerSignature, `proofPickUpSignature-${photoUUID}.png`);
+      const customerSign = await saveBase64Image(customerSignature, `proofPickUpSignature-${photoUUID}.png`);
 
       const record = await prisma.proofOfPickup.create({
         data:{
@@ -1002,7 +1002,7 @@ locationTracking: async (_: any, args: any) => {
           pickupLatitude,
           pickupLongitude,
           customerName,
-          customerSignature:customerSignature.url,
+          customerSignature:customerSign.url,
           proofPhotoUrl:PhotoURL.url ,
           packageCondition,
           numberOfPackages,
