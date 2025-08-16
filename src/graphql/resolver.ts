@@ -1013,6 +1013,9 @@ locationTracking: async (_: any, args: any) => {
           createdAt: new Date()
         }
       })
+      return {
+        statusText:'Success'
+      };
     }
   
  },
