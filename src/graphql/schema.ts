@@ -217,7 +217,7 @@ input ProcessGCashWebhookInput {
 
 type Query {
   getUsers: [User]
-  getUser(id: Int): User
+  getUser(id: String): User
   getDeliveries: [Delivery]
   getDelivery(id:String): Delivery
   getDispatch(id:String): [Delivery]
