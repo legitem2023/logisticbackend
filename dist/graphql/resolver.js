@@ -226,8 +226,12 @@ export const resolvers = {
         },
         createRider: async (_, args) => {
             try {
-                const { name, email, phoneNumber, vehicleTypeId, licensePlate, password // Expect plain text password here
-                 } = args.input;
+                const { name, email, phoneNumber, vehicleTypeId, licensePlate, password, // Expect plain text password here
+                photo, license } = args.input;
+                const UUID = uuidv4();
+                // Save images
+                const profilePhotoFile = await saveBase64Image(photo, `photo-${UUID}.jpg`);
+                const licenseFile = await saveBase64Image(license, `license-${UUID}.jpg`);
                 const passwordHash = await encryptPassword(password, 10);
                 const rider = await prisma.user.create({
                     data: {
@@ -239,6 +243,8 @@ export const resolvers = {
                         role: 'Rider',
                         vehicleTypeId,
                         status: 'AVAILABLE',
+                        image: profilePhotoFile.url,
+                        license: licenseFile.url,
                         createdAt: new Date(),
                         updatedAt: new Date()
                     },
@@ -371,24 +377,81 @@ export const resolvers = {
                 token
             };
         },
+        /*
+        locationTracking: async (_: any, args: any) => {
+         try {
+           
+        const { userID, latitude, longitude } = args.input;
+    
+        await prisma.user.update({
+          where: { id: userID },
+          data: {
+            currentLatitude: latitude,
+            currentLongitude: longitude,
+            lastUpdatedAt: new Date(),
+          },
+        });
+      console.log(userID, latitude, longitude);
+        pubsub.publish('LOCATION_TRACKING', { LocationTracking: args.input });
+    
+        return args.input;
+      } catch (error) {
+        console.log('Error updating location:', error);
+        throw new Error('Failed to update location');
+      }
+    },
+    */
         locationTracking: async (_, args) => {
             try {
                 const { userID, latitude, longitude } = args.input;
-                await prisma.user.update({
-                    where: { id: userID },
-                    data: {
-                        currentLatitude: latitude,
-                        currentLongitude: longitude,
-                        lastUpdatedAt: new Date(),
-                    },
+                // Fetch user's last update time
+                const user = await prisma.user.findUnique({
+                    where: { id: userID }
                 });
-                console.log(userID, latitude, longitude);
-                pubsub.publish('LOCATION_TRACKING', { LocationTracking: args.input });
+                const now = new Date();
+                const shouldUpdate = !(user === null || user === void 0 ? void 0 : user.lastUpdatedAt) ||
+                    (now.getTime() - new Date(user === null || user === void 0 ? void 0 : user.lastUpdatedAt).getTime()) >= 60000; // 1 min
+                if (shouldUpdate) {
+                    // Determine status based on rules
+                    let newStatus = (user === null || user === void 0 ? void 0 : user.status) || "available";
+                    if (!latitude || !longitude) {
+                        newStatus = "offline";
+                    }
+                    else if ((user === null || user === void 0 ? void 0 : user.status) === "busy") {
+                        // Keep busy status until task completion
+                        newStatus = "busy";
+                    }
+                    else {
+                        const idleTime = now.getTime() - new Date((user === null || user === void 0 ? void 0 : user.lastUpdatedAt) || now).getTime();
+                        if (idleTime >= 15 * 60000) { // 15 min
+                            newStatus = "inactive";
+                        }
+                        else {
+                            newStatus = "available";
+                        }
+                    }
+                    // Update location + status in DB
+                    await prisma.user.update({
+                        where: { id: userID },
+                        data: {
+                            currentLatitude: latitude,
+                            currentLongitude: longitude,
+                            lastUpdatedAt: now,
+                            status: newStatus,
+                        },
+                    });
+                    console.log(`Updated ${userID}: ${latitude}, ${longitude}, status=${newStatus}`);
+                }
+                else {
+                    console.log(`Skipped DB update for ${userID} (last update < 1 min ago)`);
+                }
+                // Always publish real-time updates
+                pubsub.publish("LOCATION_TRACKING", { LocationTracking: args.input });
                 return args.input;
             }
             catch (error) {
-                console.log('Error updating location:', error);
-                throw new Error('Failed to update location');
+                console.log("Error updating location:", error);
+                throw new Error("Failed to update location");
             }
         },
         sendNotification: async (_, { userID, title, message, type }) => {
@@ -815,6 +878,35 @@ export const resolvers = {
                 statusText: 'Success'
             };
         },
+        insertPickupProof: async (_parent, { input }) => {
+            const { id, riderId, pickupDateTime, pickupAddress, pickupLatitude, pickupLongitude, customerName, customerSignature, proofPhotoUrl, packageCondition, numberOfPackages, otpCode, remarks, status } = input;
+            const photoUUID = uuidv4();
+            const PhotoURL = await saveBase64Image(proofPhotoUrl, `proofPickUp-${photoUUID}.jpg`);
+            const customerSign = await saveBase64Image(customerSignature, `proofPickUpSignature-${photoUUID}.png`);
+            const record = await prisma.proofOfPickup.create({
+                data: {
+                    deliveryId: id,
+                    pickupById: riderId,
+                    pickupDateTime,
+                    pickupAddress,
+                    pickupLatitude,
+                    pickupLongitude,
+                    customerName,
+                    customerSignature: customerSign.url,
+                    proofPhotoUrl: PhotoURL.url,
+                    packageCondition,
+                    numberOfPackages,
+                    otpCode,
+                    remarks,
+                    status,
+                    updatedAt: new Date(),
+                    createdAt: new Date()
+                }
+            });
+            return {
+                statusText: 'Success'
+            };
+        }
     },
     Subscription: {
         LocationTracking: {

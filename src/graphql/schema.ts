@@ -113,13 +113,13 @@ type ProofOfDelivery {
 }
 
 type ProofOfPickup {
-  id: String!
-  delivery: Delivery!
+  id: String
+  delivery: Delivery
   pickupDateTime: String
   pickupAddress: String
   pickupLatitude: Float
   pickupLongitude: Float
-  pickupBy: User!
+  pickupBy: User
   customerName: String
   customerSignature: String
   proofPhotoUrl: String
@@ -336,7 +336,7 @@ input ProofOfDeliveryInput {
   signatureData: String!
 }
 
-input ProofOfPickup {
+input ProofOfPickupInput {
   id: String
   riderId: String
   pickupDateTime: String
@@ -354,7 +354,7 @@ input ProofOfPickup {
 }
 
 type Mutation {
-  insertPickupProof(input:ProofOfPickup):Result
+  insertPickupProof(input:ProofOfPickupInput):Result
   # GCash Payments
   initiateGCashPayment(input: InitiateGCashPaymentInput!): GCashPaymentResponse!
   verifyGCashPayment(input: VerifyGCashPaymentInput!): Transaction!

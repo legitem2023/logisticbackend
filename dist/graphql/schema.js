@@ -33,6 +33,7 @@ type User {
   createdAt: String
   updatedAt: String
   role: String
+  license: String
 }
 
 # Location Tracking
@@ -81,6 +82,7 @@ type Delivery {
   packageId: String
   packages:[Package]
   proofOfDelivery: [ProofOfDelivery]
+  proofOfPickup: [ProofOfPickup]
   baseRate: Float
   perKmRate: Float
   distance: Float
@@ -106,6 +108,28 @@ type ProofOfDelivery {
   receivedBy: String!
   receivedAt: String!
 }
+
+type ProofOfPickup {
+  id: String
+  delivery: Delivery
+  pickupDateTime: String
+  pickupAddress: String
+  pickupLatitude: Float
+  pickupLongitude: Float
+  pickupBy: User
+  customerName: String
+  customerSignature: String
+  proofPhotoUrl: String
+  packageCondition: String
+  numberOfPackages: Int
+  otpCode: String
+  remarks: String
+  status:  String   #picked_up, failed, pending
+  createdAt: String
+  updatedAt: String
+}
+
+
 
 # Route History
 type RouteHistory {
@@ -140,9 +164,80 @@ type Notification {
   createdAt: String
 }
 
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  GCASH
+  PAYMAYA
+  BANK_TRANSFER
+  WALLET
+}
+
+type Transaction {
+  id: String!
+  walletId: String
+  wallet: Wallet
+  deliveryId: String
+  delivery: Delivery
+  type: String!
+  amount: Float!
+  description: String!
+  status: TransactionStatus!
+  referenceId: String
+  paymentMethod: PaymentMethod
+  createdAt: String!
+}
+
+type Wallet {
+  id: String!
+  user: User!
+  balance: Float!
+  currency: String!
+  transactions: [Transaction]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type GCashPaymentResponse {
+  paymentId: String!
+  gcashPaymentId: String!
+  qrCodeUrl: String
+  checkoutUrl: String!
+  status: TransactionStatus!
+  referenceId: String!
+}
+
+input InitiateGCashPaymentInput {
+  deliveryId: String!
+  amount: Float!
+  description: String
+}
+
+input VerifyGCashPaymentInput {
+  paymentId: String!
+}
+
+input ProcessGCashWebhookInput {
+  paymentId: String!
+  referenceId: String!
+  status: TransactionStatus!
+}
+
+
+
+
 type Query {
   getUsers: [User]
-  getUser(id: Int): User
+  getUser(id: String): User
   getDeliveries: [Delivery]
   getDelivery(id:String): Delivery
   getDispatch(id:String): [Delivery]
@@ -150,6 +245,9 @@ type Query {
   getVehicleTypes: [VehicleType]
   getRiders: [User]
   getNotifications(id:String): [Notification]
+  getTransaction(paymentId: String!): Transaction
+  getWallet(userId: String!): Wallet
+  getTransactionsByUser(userId: String!): [Transaction]!
 }
 
 type Result {
@@ -184,6 +282,8 @@ input CreateRiderInput {
   vehicleTypeId: String
   licensePlate: String
   password: String
+  photo: String
+  license: String
 }
 
 input LoginInput {
@@ -233,7 +333,45 @@ input ProofOfDeliveryInput {
   signatureData: String!
 }
 
+input ProofOfPickupInput {
+  id: String
+  riderId: String
+  pickupDateTime: String
+  pickupAddress: String
+  pickupLatitude: Float
+  pickupLongitude: Float
+  customerName: String
+  customerSignature: String
+  proofPhotoUrl: String
+  packageCondition: String
+  numberOfPackages: Int
+  otpCode: String
+  remarks: String
+  status: String
+}
+
 type Mutation {
+  insertPickupProof(input:ProofOfPickupInput):Result
+  # GCash Payments
+  initiateGCashPayment(input: InitiateGCashPaymentInput!): GCashPaymentResponse!
+  verifyGCashPayment(input: VerifyGCashPaymentInput!): Transaction!
+  processGCashWebhook(input: ProcessGCashWebhookInput!): Boolean!
+  
+  # Wallet Operations
+  createWallet(userId: String!): Wallet!
+  topUpWallet(walletId: String!, amount: Float!, method: PaymentMethod!): Transaction!
+  transferWalletToWallet(
+    senderWalletId: String!, 
+    receiverWalletId: String!, 
+    amount: Float!,
+    pin: String!
+  ): Transaction!
+  
+  # Delivery Payment Updates
+  markDeliveryAsPaid(deliveryId: String!, method: PaymentMethod!): Delivery!
+  refundDeliveryPayment(deliveryId: String!): Transaction!
+
+
   uploadFile(file: ProofOfDeliveryInput!): Result
   assignRider(deliveryId: String!, riderId: String!): Result
   createDelivery(input: CreateDeliveryInput):Result

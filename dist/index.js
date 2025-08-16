@@ -17,6 +17,7 @@ import { typeDefs } from './graphql/schema.js';
 import { resolvers } from './graphql/resolver.js';
 import { CronJob } from 'cron';
 import { reassignStaleDeliveries } from './script/reassignStaleDeliveries.js';
+import { markInactiveUsers } from './script/markInactiveUsers.js';
 dotenv.config();
 async function init() {
     const app = express();
@@ -85,6 +86,7 @@ async function init() {
     true, // start immediately
     'UTC' // timezone
     );
+    markInactiveUsers.start();
     // ✅ Apollo middleware (🔧 TS-safe fix here)
     app.use('/graphql', await expressMiddleware(server, {
         context: async ({ req }) => ({
