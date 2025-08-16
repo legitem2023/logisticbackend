@@ -85,6 +85,7 @@ type Delivery {
   packageId: String
   packages:[Package]
   proofOfDelivery: [ProofOfDelivery]
+  proofOfPickup: [ProofOfPickup]
   baseRate: Float
   perKmRate: Float
   distance: Float
@@ -110,6 +111,28 @@ type ProofOfDelivery {
   receivedBy: String!
   receivedAt: String!
 }
+
+type ProofOfPickup {
+  id: String!
+  delivery: Delivery!
+  pickupDateTime  String
+  pickupAddress   String
+  pickupLatitude  Float
+  pickupLongitude Float
+  pickupBy        User!
+  customerName    String
+  customerSignature String
+  proofPhotoUrl   String
+  packageCondition String
+  numberOfPackages Int
+  otpCode         String
+  remarks         String
+  status          String   #picked_up, failed, pending
+  createdAt       String
+  updatedAt       String
+}
+
+
 
 # Route History
 type RouteHistory {
