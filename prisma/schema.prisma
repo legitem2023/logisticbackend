@@ -33,6 +33,7 @@ model User {
   locations       LocationTracking[]
   deliveries      Delivery[] @relation("AssignedDeliveries")
   sentDeliveries  Delivery[] @relation("SenderDeliveries")
+  proofOfPickups    ProofOfPickup[]   @relation("UserPickupProofs")
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
