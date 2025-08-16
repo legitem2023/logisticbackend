@@ -337,6 +337,7 @@ input ProofOfDeliveryInput {
 }
 
 input ProofOfPickup {
+  id: String
   pickupDateTime: String
   pickupAddress: String
   pickupLatitude: Float
@@ -348,6 +349,7 @@ input ProofOfPickup {
   numberOfPackages: Int
   otpCode: String
   remarks: String
+  status: String
 }
 
 type Mutation {
