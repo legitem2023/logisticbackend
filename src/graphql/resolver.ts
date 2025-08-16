@@ -973,6 +973,47 @@ locationTracking: async (_: any, args: any) => {
         statusText:'Success'
       };
     },
+    insertPickupProof: async (_parent: any, { input }: any) =>{
+      const {id, 
+             riderId,
+             pickupDateTime, 
+             pickupAddress, 
+             pickupLatitude, 
+             pickupLongitude, 
+             customerName, 
+             customerSignature, 
+             proofPhotoUrl, 
+             packageCondition, 
+             numberOfPackages, 
+             otpCode, 
+             remarks,
+             status
+            } = input
+      const photoUUID = uuidv4();
+      const PhotoURL = await saveBase64Image(proofPhotoUrl, `proofPickUp-${photoUUID}.jpg`);
+      const customerSignature = await saveBase64Image(customerSignature, `proofPickUpSignature-${photoUUID}.png`);
+
+      const record = await prisma.proofOfPickup.create({
+        data:{
+          deliveryId:id,
+          pickupById:riderId,
+          pickupDateTime,
+          pickupAddress,
+          pickupLatitude,
+          pickupLongitude,
+          customerName,
+          customerSignature:customerSignature.url,
+          proofPhotoUrl:PhotoURL.url ,
+          packageCondition,
+          numberOfPackages,
+          otpCode,
+          remarks,
+          status,
+          updatedAt: new Date(),
+          createdAt: new Date()
+        }
+      })
+    }
   
  },
 Subscription: {
