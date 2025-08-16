@@ -199,7 +199,7 @@ model DeliveryStatusLog {
 
 model ProofOfPickup {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  deliveryId      String   @unique @db.ObjectId
+  deliveryId      String   @db.ObjectId
   delivery        Delivery @relation(fields: [deliveryId], references: [id])
 
   pickupDateTime  DateTime @default(now())          // when pickup occurred
@@ -226,7 +226,7 @@ model ProofOfPickup {
 
 model ProofOfDelivery {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  deliveryId    String   @unique @db.ObjectId
+  deliveryId    String   @db.ObjectId
   delivery      Delivery @relation(fields: [deliveryId], references: [id])
   photoUrl      String?
   signatureData String?
