@@ -27,7 +27,7 @@ model User {
   license       String?
   wallet        Wallet?
   security      Security? 
-  
+  address       String?
 
   // Relations
   locations       LocationTracking[]
