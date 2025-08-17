@@ -289,6 +289,13 @@ input CreateRiderInput {
   license: String
 }
 
+input CreateSenderInput {
+  name: String
+  email: String
+  phoneNumber: String
+  password: String
+}
+
 input LoginInput {
   email: String
   password: String
@@ -378,6 +385,7 @@ type Mutation {
   uploadFile(file: ProofOfDeliveryInput!): Result
   assignRider(deliveryId: String!, riderId: String!): Result
   createDelivery(input: CreateDeliveryInput):Result
+  createSender(input: CreateSenderInput): Result
   createRider(input: CreateRiderInput): Result
   login(input: LoginInput): Result
   loginWithGoogle(input: GoogleLoginInput): Result
