@@ -265,7 +265,44 @@ export const resolvers = {
           message: error.message || "Something went wrong"
         };
       }
-    },    
+    }, 
+    createSender: async (_: any, args: any) => {
+      try {
+        const {
+          name,
+          email,
+          phoneNumber,
+          password // Expect plain text password here
+        } = args.input;
+
+        const passwordHash = await encryptPassword(password, 10);
+
+        const sender = await prisma.user.create({
+          data: {
+            name,
+            email,
+            phoneNumber,
+            passwordHash, // Now correctly named and stored
+            role: 'Sender',
+            status: 'available',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          include: {
+            vehicleType: true
+          }
+        });
+
+        return {
+          statusText: "success",
+        };
+
+      } catch (error) {
+        return {
+          statusText: "Error"+ error,
+        };
+      }
+    },
     createRider: async (_: any, args: any) => {
       try {
         const {
