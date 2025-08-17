@@ -295,7 +295,7 @@ export const resolvers = {
             passwordHash, // Now correctly named and stored
             role: 'Rider',
             vehicleTypeId,
-            status: 'AVAILABLE',
+            status: 'available',
             image:profilePhotoFile.url,
             license:licenseFile.url,
             createdAt: new Date(),
