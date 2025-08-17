@@ -41,8 +41,8 @@ export const autoAssignRider = async (deliveryId: string) => {
   // 3. Find eligible active riders (without include)
   const eligibleRiders = await prisma.user.findMany({
     where: {
-      role: 'RIDER',
-      status: 'AVAILABLE',
+      role: 'Rider',
+      status: 'available',
       lastUpdatedAt: { 
         gte: new Date(Date.now() - 45 * 60 * 1000)
       },
