@@ -272,7 +272,8 @@ export const resolvers = {
           name,
           email,
           phoneNumber,
-          password // Expect plain text password here
+          password, // Expect plain text password here
+          address
         } = args.input;
 
         const passwordHash = await encryptPassword(password, 10);
@@ -285,6 +286,7 @@ export const resolvers = {
             passwordHash, // Now correctly named and stored
             role: 'Sender',
             status: 'available',
+            address,
             createdAt: new Date(),
             updatedAt: new Date()
           },
