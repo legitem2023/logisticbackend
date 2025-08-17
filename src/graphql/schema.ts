@@ -294,6 +294,7 @@ input CreateSenderInput {
   email: String
   phoneNumber: String
   password: String
+  address: String
 }
 
 input LoginInput {
