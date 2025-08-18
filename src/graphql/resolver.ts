@@ -35,7 +35,8 @@ export const resolvers = {
           sender: true,        // include rider info
           assignedRider:true,
           packages:true,
-          proofOfDelivery:true
+          proofOfDelivery:true,
+          proofOfPickup:true
         },
       })
     },
@@ -49,7 +50,8 @@ export const resolvers = {
           sender:true,
           assignedRider: true, // Include full rider info in the response
           packages:true,
-          proofOfDelivery:true
+          proofOfDelivery:true,
+          proofOfPickup:true
         },        
         orderBy: {
           createdAt: 'desc',
@@ -69,7 +71,8 @@ export const resolvers = {
             sender: true,        // include rider info
             assignedRider:true,
             packages:true,
-            proofOfDelivery:true
+            proofOfDelivery:true,
+            proofOfPickup:true
           },
         })
     },
@@ -82,7 +85,8 @@ export const resolvers = {
           sender:true,
           assignedRider: true, // Include full rider info in the response
           packages:true,
-          proofOfDelivery:true
+          proofOfDelivery:true,
+          proofOfPickup:true
         },
         orderBy: {
           createdAt: 'desc',
