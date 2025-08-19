@@ -6,17 +6,15 @@ const prisma = new PrismaClient();
 let dist:any;
 interface ScoredRider extends User {
   score: number;
-  canCarry: boolean;
   currentDeliveries: number;
   vehicleType?: VehicleType | null;
 }
 
 export const autoAssignRider = async (deliveryId: string) => {
-  // 1. Get the delivery with pickup location
+  // 1. Get the delivery with pickup location (without packages since we dont need them)
   const delivery = await prisma.delivery.findUnique({
     where: { id: deliveryId },
     include: { 
-      packages: true,
       assignedRider: true 
     },
   });
@@ -24,42 +22,25 @@ export const autoAssignRider = async (deliveryId: string) => {
   if (!delivery) throw new Error('Delivery not found');
   if (delivery.assignedRiderId) throw new Error('Delivery already assigned');
 
-  // 2. Calculate total package weight/volume
-  const totalWeight = delivery.packages.reduce((sum, pkg) => sum + (pkg.weight || 0), 0);
-  const totalVolume = delivery.packages.reduce((sum, pkg) => {
-    if (!pkg.dimensions) return sum;
-
-    const dims = pkg.dimensions.split('x').map(Number);
-    const [l, w, h] = dims;
-
-    if ([l, w, h].some(v => isNaN(v))) return sum; // skip invalid dimensions
-
-    return sum + (l * w * h);
-  }, 0);
-
-  console.log(totalWeight, totalVolume);
-  // 3. Find eligible active riders (without include)
-const eligibleRiders = await prisma.user.findMany({
-  where: {
-    role: {
-      in: ["RIDER", "Rider"] // Correctly checks for both role values
-    },
-    status: {
-      in: ["available","AVAILABLE"]
-    },
-    lastUpdatedAt: { 
-      gte: new Date(Date.now() - 45 * 60 * 1000)
-    },
-    currentLatitude: { not: null },
-    currentLongitude: { not: null },
-  }
-});
-//console.log(eligibleRiders,'<-legit-');
+  // 3. Find eligible active riders
+  const eligibleRiders = await prisma.user.findMany({
+    where: {
+      role: {
+        in: ["RIDER", "Rider"]
+      },
+      status: {
+        in: ["available","AVAILABLE"]
+      },
+      currentLatitude: { not: null },
+      currentLongitude: { not: null },
+    }
+  });
+  
   if (eligibleRiders.length === 0) {
     throw new Error('No active riders available');
   }
 
-  // 4. Score and filter riders by proximity and capacity
+  // 4. Score riders by proximity
   const scoredRiders: ScoredRider[] = [];
   for (const rider of eligibleRiders) {
     const distance = calculateHaversineDistance(
@@ -81,11 +62,6 @@ const eligibleRiders = await prisma.user.findMany({
           where: { id: rider.vehicleTypeId }
         })
       : null;
-   
-    const canCarry = vehicleType
-      ? (totalWeight <= (vehicleType.maxCapacityKg || Infinity)) &&
-        (totalVolume <= (vehicleType.maxVolumeM3 || Infinity))
-      : false;
 
     const score =
       distance * 0.6 +
@@ -96,20 +72,17 @@ const eligibleRiders = await prisma.user.findMany({
     scoredRiders.push({
       ...rider,
       score,
-      canCarry,
       currentDeliveries,
       vehicleType,
     });
   }
-  console.log(scoredRiders,'<-scoredRiders-');
-  // 5. Select best available rider
-  const bestRider = scoredRiders
-    .filter(r => r.canCarry)
-    .sort((a, b) => a.score - b.score)[0];
-  
-  if (!bestRider) {
-    throw new Error('No suitable rider found within range');
+
+  if (scoredRiders.length === 0) {
+    throw new Error('No riders found within range');
   }
+
+  // 5. Select best rider based on score
+  const bestRider = scoredRiders.sort((a, b) => a.score - b.score)[0];
 
   const note = async(bestRider:any)=>{
     const notification:any = {
@@ -121,6 +94,7 @@ const eligibleRiders = await prisma.user.findMany({
     await notifier(notification);
   }
   note(bestRider);
+  
   // 6. Assign rider and log status
   return await prisma.$transaction([
     prisma.delivery.update({
@@ -140,9 +114,5 @@ const eligibleRiders = await prisma.user.findMany({
       },
       include: { assignedRider: true }
     }),
-   
   ]);
-
-  
 };
-
