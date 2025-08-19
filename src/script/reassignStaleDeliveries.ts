@@ -100,7 +100,7 @@ async function processDeliveryWithRetry(
     if (currentRiderId) {
       await tx.user.update({
         where: { id: currentRiderId },
-        data: { status: 'AVAILABLE' },
+        data: { status: 'available' },
       });
     }
 
