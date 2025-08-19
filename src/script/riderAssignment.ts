@@ -39,17 +39,21 @@ export const autoAssignRider = async (deliveryId: string) => {
 
   console.log(totalWeight, totalVolume);
   // 3. Find eligible active riders (without include)
-  const eligibleRiders = await prisma.user.findMany({
-    where: {
-      role: 'Rider',
-      status: 'available',
-      lastUpdatedAt: { 
-        gte: new Date(Date.now() - 45 * 60 * 1000)
-      },
-      currentLatitude: { not: null },
-      currentLongitude: { not: null },
-    }
-  });
+const eligibleRiders = await prisma.user.findMany({
+  where: {
+    role: {
+      in: ["RIDER", "Rider"] // Correctly checks for both role values
+    },
+    status: {
+      in: ["available","AVAILABLE"]
+    },
+    lastUpdatedAt: { 
+      gte: new Date(Date.now() - 45 * 60 * 1000)
+    },
+    currentLatitude: { not: null },
+    currentLongitude: { not: null },
+  }
+});
 //console.log(eligibleRiders,'<-legit-');
   if (eligibleRiders.length === 0) {
     throw new Error('No active riders available');
