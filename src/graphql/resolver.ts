@@ -99,11 +99,17 @@ export const resolvers = {
       const data = await prisma.vehicleType.findMany();
       return data;
     },
-    getRiders: async (_:any,_args:any) => {
-      const data = await prisma.user.findMany({where: {role: 'RIDER'},include:{
-        vehicleType:true
-      }});
-      //console.log(data,"<===");
+    getRiders: async (_: any, _args: any) => {
+      const data = await prisma.user.findMany({
+     where: {
+      role: {
+         in: ["RIDER", "Rider"] // Use Prisma's `in` operator to match multiple values
+       }
+      },
+       include: {
+         vehicleType: true
+       }
+     });
       return data;
     },
     getNotifications: async (_:any, args: { id: string }) => { 
