@@ -99,19 +99,26 @@ export const resolvers = {
       const data = await prisma.vehicleType.findMany();
       return data;
     },
-    getRiders: async (_: any, _args: any) => {
-      const data = await prisma.user.findMany({
-     where: {
+getRiders: async (_: any, _args: any) => {
+  const data = await prisma.user.findMany({
+    where: {
       role: {
-         in: ["RIDER", "Rider"] // Use Prisma's `in` operator to match multiple values
-       }
+        equals: "rider",
+        mode: 'insensitive'
       },
-       include: {
-         vehicleType: true
-       }
-     });
-      return data;
-    },
+      status: {
+        equals: "available",
+        mode: 'insensitive'
+      },
+      lastUpdatedAt: { 
+        gte: new Date(Date.now() - 45 * 60 * 1000)
+      },
+      currentLatitude: { not: null },
+      currentLongitude: { not: null },
+    }
+  });
+  return data;
+},
     getNotifications: async (_:any, args: { id: string }) => { 
       try {
          const Notification = await prisma.notification.findMany({  
