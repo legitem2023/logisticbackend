@@ -69,6 +69,7 @@ type Delivery {
   assignedRider: User
   deliveryStatus: String
   estimatedDeliveryTime: String
+  eta: String
   actualDeliveryTime: String
   createdAt: String
   updatedAt: String
@@ -271,6 +272,7 @@ input CreateDeliveryInput {
   dropoffLongitude: Float
   assignedRiderId: String
   estimatedDeliveryTime: String
+  eta: String
   deliveryType: String
   paymentStatus: String
   paymentMethod: String
