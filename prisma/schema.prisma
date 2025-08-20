@@ -157,7 +157,7 @@ model Delivery {
   assignedRider        User?    @relation("AssignedDeliveries", fields: [assignedRiderId], references: [id])
   deliveryStatus       String   @default("pending")
   estimatedDeliveryTime DateTime?
-  eta: String?
+  eta                  String?
   actualDeliveryTime   DateTime?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
