@@ -151,6 +151,7 @@ getRiders: async (_: any, _args: any) => {
           dropoffLongitude,
           assignedRiderId,
           estimatedDeliveryTime, // this is a string
+          eta, 
           deliveryType,
           paymentStatus,
           paymentMethod,
@@ -219,6 +220,7 @@ getRiders: async (_: any, _args: any) => {
             assignedRider: assignedRiderId ? { connect: { id: assignedRiderId } } : undefined,
             deliveryStatus: "Pending",
             estimatedDeliveryTime: parsedEstimatedTime,
+            eta,
             deliveryType,
             paymentStatus,
             paymentMethod,
