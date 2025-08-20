@@ -124,7 +124,10 @@ getRiders: async (_: any, _args: any) => {
          const Notification = await prisma.notification.findMany({  
           where: { 
             userId: args.id
-          }
+          },        
+          orderBy: {
+            createdAt: 'desc',
+           },
         })
         pubsub.publish(NOTIFICATION_RECEIVED, {
         notificationReceived: Notification,
