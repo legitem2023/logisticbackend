@@ -1064,13 +1064,13 @@ locationTracking: async (_: any, args: any) => {
       const timeInterval = getHourMinuteDiff(timeStarted?.timestamp,nowUnix);
       console.log("timestamp",timeInterval);
      await prisma.delivery.update({
-        where: { id: id },
-        data: {
-          actualDeliveryTime:new Date(),
-          ata: timeInterval.toString(),
-          updatedAt: new Date()
-        }
-      });
+          where: { id: id },
+          data: {
+            actualDeliveryTime: new Date(),
+            ata: timeInterval ? timeInterval.toString() : "",
+            updatedAt: new Date()
+           }
+         });
       
       return {
         statusText:'Success'
