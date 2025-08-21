@@ -1052,7 +1052,10 @@ locationTracking: async (_: any, args: any) => {
                  timestamp:true
                }
              })
-      console.log("timestamp",timeStarted);
+      const nowUnix = Math.floor(Date.now() / 1000); 
+      const timeInterval = getHourMinuteDiff(timeStarted,nowUnix);
+      console.log("timestamp",timeInterval);
+      
       return {
         statusText:'Success'
       };
