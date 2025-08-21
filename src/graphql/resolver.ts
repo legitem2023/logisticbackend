@@ -21,25 +21,19 @@ import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const pubsub = new PubSub();
-export function getHourMinuteDiff(
+export function getMinuteDiff(
   start?: Date | number,
   end?: Date | number
-): { hours: number; minutes: number } | null {
-  // if either is missing, return null
+): number | null {
   if (!start || !end) return null;
 
-  // normalize values into milliseconds
-  const startMs =
-    start instanceof Date ? start.getTime() : (start as number) * 1000;
-  const endMs =
-    end instanceof Date ? end.getTime() : (end as number) * 1000;
+  const startMs = start instanceof Date ? start.getTime() : start * 1000;
+  const endMs = end instanceof Date ? end.getTime() : end * 1000;
 
   const diffMs = Math.abs(endMs - startMs);
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
 
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-  return { hours, minutes };
+  return totalMinutes;
 }
 const LOCATION_TRACKING: any = "";
 const NOTIFICATION_RECEIVED:any = "";
@@ -1061,7 +1055,7 @@ locationTracking: async (_: any, args: any) => {
                }
              })
       const nowUnix = Math.floor(Date.now() / 1000); 
-      const timeInterval = getHourMinuteDiff(timeStarted?.timestamp,nowUnix);
+      const timeInterval = getMinuteDiff(timeStarted?.timestamp,nowUnix);
       console.log("timestamp",timeInterval);
      await prisma.delivery.update({
           where: { id: id },
