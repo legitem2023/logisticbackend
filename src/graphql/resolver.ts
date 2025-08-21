@@ -21,12 +21,14 @@ import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const pubsub = new PubSub();
-export function getHourMinuteDiff(startTimestamp: number, endTimestamp: number): { hours: number; minutes: number } {
-  // if timestamps are in seconds, convert to ms
-  if (startTimestamp < 1e12) startTimestamp *= 1000;
-  if (endTimestamp < 1e12) endTimestamp *= 1000;
+export function getHourMinuteDiff(
+  start: number | Date,
+  end: number | Date
+): { hours: number; minutes: number } {
+  const startMs = start instanceof Date ? start.getTime() : (start < 1e12 ? start * 1000 : start);
+  const endMs = end instanceof Date ? end.getTime() : (end < 1e12 ? end * 1000 : end);
 
-  const diffMs = endTimestamp - startTimestamp;
+  const diffMs = endMs - startMs;
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const hours = Math.floor(diffMinutes / 60);
   const minutes = diffMinutes % 60;
