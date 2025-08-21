@@ -159,6 +159,7 @@ model Delivery {
   estimatedDeliveryTime DateTime?
   eta                  String?
   actualDeliveryTime   DateTime?
+  ata                  String?
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   paymentCode          String?
