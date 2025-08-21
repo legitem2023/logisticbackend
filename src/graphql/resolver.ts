@@ -22,16 +22,22 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secr
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const pubsub = new PubSub();
 export function getHourMinuteDiff(
-  start: number | Date,
-  end: number | Date
-): { hours: number; minutes: number } {
-  const startMs = start instanceof Date ? start.getTime() : (start < 1e12 ? start * 1000 : start);
-  const endMs = end instanceof Date ? end.getTime() : (end < 1e12 ? end * 1000 : end);
+  start?: Date | number,
+  end?: Date | number
+): { hours: number; minutes: number } | null {
+  // if either is missing, return null
+  if (!start || !end) return null;
 
-  const diffMs = endMs - startMs;
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const hours = Math.floor(diffMinutes / 60);
-  const minutes = diffMinutes % 60;
+  // normalize values into milliseconds
+  const startMs =
+    start instanceof Date ? start.getTime() : (start as number) * 1000;
+  const endMs =
+    end instanceof Date ? end.getTime() : (end as number) * 1000;
+
+  const diffMs = Math.abs(endMs - startMs);
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 
   return { hours, minutes };
 }
