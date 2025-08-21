@@ -1031,6 +1031,16 @@ locationTracking: async (_: any, args: any) => {
         },
       });
 
+      const timeStarted = await prisma.deliveryStatusLog.findFirst({
+               where: {
+                   deliveryId: id,
+                   status: "TimeStart",
+               },
+               select:{
+                 timestamp:true
+               }
+             })
+      console.log("timestamp",timeStarted);
       return {
         statusText:'Success'
       };
@@ -1074,6 +1084,15 @@ locationTracking: async (_: any, args: any) => {
           updatedAt: new Date(),
           createdAt: new Date()
         }
+      })
+      await prisma.deliveryStatusLog.create({
+              data:{
+                status: "TimeStart",
+                deliveryId:id,
+                updatedById: riderId,
+                timestamp: new Date(),
+                remarks: "Delivery Time Start"
+          }
       })
       return {
         statusText:'Success'
