@@ -71,6 +71,7 @@ type Delivery {
   estimatedDeliveryTime: String
   eta: String
   actualDeliveryTime: String
+  ata: String
   createdAt: String
   updatedAt: String
   deliveryType:String
