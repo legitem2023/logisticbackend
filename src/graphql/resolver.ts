@@ -21,6 +21,18 @@ import { EncryptJWT } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const pubsub = new PubSub();
+export function getHourMinuteDiff(startTimestamp: number, endTimestamp: number): { hours: number; minutes: number } {
+  // if timestamps are in seconds, convert to ms
+  if (startTimestamp < 1e12) startTimestamp *= 1000;
+  if (endTimestamp < 1e12) endTimestamp *= 1000;
+
+  const diffMs = endTimestamp - startTimestamp;
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMinutes / 60);
+  const minutes = diffMinutes % 60;
+
+  return { hours, minutes };
+}
 const LOCATION_TRACKING: any = "";
 const NOTIFICATION_RECEIVED:any = "";
 export const resolvers = {
