@@ -52,10 +52,7 @@ export const resolvers = {
           packages:true,
           proofOfDelivery:true,
           proofOfPickup:true
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
+        }
       })
     },
     getDispatch: async (_:any, args: {id: string }) =>{
@@ -91,10 +88,7 @@ export const resolvers = {
             packages:true,
             proofOfDelivery:true,
             proofOfPickup:true
-          },
-          orderBy: {
-          createdAt: 'desc',
-        },
+          }
         })
     },
     getRidersDelivery: async (_: any, args: { id: string }) => {
