@@ -477,11 +477,11 @@ getRiders: async (_: any, _args: any) => {
     };
     },
     loginWithFacebook: async (_: any, args: any) => {
-    const { accessToken } = args.input;
+    const { idToken } = args.input;
 
 // 1. Verify the token with Facebook Graph API
 const fbRes = await fetch(
-  `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${accessToken}`
+  `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${idToken}`
 );
 const fbUser = await fbRes.json();
 console.log(fbUser);
