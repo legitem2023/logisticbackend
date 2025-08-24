@@ -300,6 +300,7 @@ input EditRiderInput {
   phoneNumber: String
   vehicleTypeId: String
   licensePlate: String
+  role: String
 }
 
 input CreateSenderInput {
