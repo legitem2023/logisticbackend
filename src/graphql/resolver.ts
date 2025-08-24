@@ -393,7 +393,25 @@ getRiders: async (_: any, _args: any) => {
       }
     },
     editRider: async (_: any, args: any) =>{
-      //const {} = args.input;
+      const {  id, name, email, phoneNumber, vehicleTypeId, licensePlate, role } = args.input;
+      const result = await prisma.user.update({
+        where:{
+          id:id
+        },
+        data:{
+          name,
+          email,
+          phoneNumber,
+          vehicleTypeId,
+          licensePlate,
+          role
+        }
+      })
+      if(result){
+        return {
+          statusText:'Successful'
+        }
+      }
     },
     login: async (_: any, args: any) => {
     const { email, password } = args.input;
