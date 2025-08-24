@@ -392,6 +392,9 @@ getRiders: async (_: any, _args: any) => {
         };
       }
     },
+    editRider: async (_: any, args: any) =>{
+      //const {} = args.input;
+    },
     login: async (_: any, args: any) => {
     const { email, password } = args.input;
     const user = await prisma.user.findUnique({ where: { email } });
