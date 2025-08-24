@@ -293,6 +293,15 @@ input CreateRiderInput {
   license: String
 }
 
+input EditRiderInput {
+  id: String
+  name: String
+  email: String
+  phoneNumber: String
+  vehicleTypeId: String
+  licensePlate: String
+}
+
 input CreateSenderInput {
   name: String
   email: String
@@ -392,6 +401,7 @@ type Mutation {
   createDelivery(input: CreateDeliveryInput):Result
   createSender(input: CreateSenderInput): Result
   createRider(input: CreateRiderInput): Result
+  editRider(input:EditRiderInput):Result
   login(input: LoginInput): Result
   loginWithGoogle(input: GoogleLoginInput): Result
   loginWithFacebook(input: GoogleLoginInput): Result
