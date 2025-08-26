@@ -28,16 +28,22 @@ export const getBestAvailableRider = async (deliveryId: string): Promise<ScoredR
 
   // 3. Find eligible riders
   const eligibleRiders = await prisma.user.findMany({
-    where: {
-      role: 'RIDER',
-      status: 'AVAILABLE',
-      lastUpdatedAt: {
-        gte: new Date(Date.now() - 5 * 60 * 1000)
-      },
-      currentLatitude: { not: null },
-      currentLongitude: { not: null },
-    }
-  });
+  where: {
+    role: {
+      equals: 'RIDER',
+      mode: 'insensitive',
+    },
+    status: {
+      equals: 'AVAILABLE',
+      mode: 'insensitive',
+    },
+    lastUpdatedAt: {
+      gte: new Date(Date.now() - 5 * 60 * 1000),
+    },
+    currentLatitude: { not: null },
+    currentLongitude: { not: null },
+  },
+});
 
   if (eligibleRiders.length === 0) {
     throw new Error('No active riders available');
