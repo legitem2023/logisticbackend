@@ -4,6 +4,7 @@ import { getBestAvailableRider } from './getBestAvailableRider.js';
 const prisma = new PrismaClient();
 const SYSTEM_USER_ID = process.env.SYSTEM_USER_ID || 'system-automation';
 const MAX_RETRIES = 3;
+const TRANSACTION_TIMEOUT = 30000; // 30 seconds instead of default 5
 
 // Explicit interface matching Prisma's generated type
 interface DeliveryWithRider {
@@ -79,13 +80,18 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
   }
 };
 
-// Process deliveries in a transaction
+// Process deliveries in a transaction with increased timeout
 async function processDeliveries(deliveries: DeliveryWithRider[]): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    for (const delivery of deliveries) {
-      await processDeliveryWithRetry(tx, delivery, MAX_RETRIES);
+  await prisma.$transaction(
+    async (tx) => {
+      for (const delivery of deliveries) {
+        await processDeliveryWithRetry(tx, delivery, MAX_RETRIES);
+      }
+    },
+    {
+      timeout: TRANSACTION_TIMEOUT, // Added timeout option
     }
-  });
+  );
 }
 
 // Retry logic per delivery
