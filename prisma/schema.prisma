@@ -174,7 +174,7 @@ model Delivery {
   baseRate             Float?
   perKmRate            Float?
   distance             Float?
-
+  retriesCount         Float?
   walletTransaction    Transaction?
   statusLogs           DeliveryStatusLog[]
   proofOfPickup        ProofOfPickup[]
