@@ -3,10 +3,9 @@ import { getBestAvailableRider } from './getBestAvailableRider.js';
 
 const prisma = new PrismaClient();
 const SYSTEM_USER_ID = process.env.SYSTEM_USER_ID || 'system-automation';
-const MAX_RETRIES = 3;
-const TRANSACTION_TIMEOUT = 30000; // 30 seconds instead of default 5
+const MAX_RETRIES = 5; // Now matches the database field
+const TRANSACTION_TIMEOUT = 30000;
 
-// Explicit interface matching Prisma's generated type
 interface DeliveryWithRider {
   id: string;
   assignedRiderId: string | null;
@@ -17,21 +16,15 @@ interface DeliveryWithRider {
   deliveryStatus: string;
   updatedAt: Date;
   createdAt: Date;
+  retriesCount: number; // Added retriesCount
 }
 
 interface RiderResult {
   id: string;
   name: string | null;
-  image?: string | null;
-  email?: string | null;
-  phoneNumber?: string;
-  passwordHash?: string | null;
-  vehicleTypeId?: string | null;
-  status?: string;
-  rating?: number | null;
+  // ... other fields
 }
 
-// Main function
 export const reassignStaleDeliveries = async (): Promise<void> => {
   const STALE_DURATION_MINUTES = 5;
   const staleThreshold = new Date(Date.now() - STALE_DURATION_MINUTES * 60 * 1000);
@@ -55,7 +48,8 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
             createdAt: { lt: staleThreshold },
             assignedRiderId: null,  
           }
-        ]
+        ],
+        retriesCount: { lt: MAX_RETRIES } // Only process deliveries with retries left
       },
       include: {
         assignedRider: {
@@ -72,7 +66,7 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
       return;
     }
 
-    await processDeliveries(staleDeliveries);
+    await processDeliveries(staleDeliveries, staleThreshold);
     console.log('✅ Completed processing all stale deliveries');
   } catch (error) {
     console.error('❌ Error processing stale deliveries:', error);
@@ -80,85 +74,102 @@ export const reassignStaleDeliveries = async (): Promise<void> => {
   }
 };
 
-// Process deliveries in a transaction with increased timeout
-async function processDeliveries(deliveries: DeliveryWithRider[]): Promise<void> {
-  await prisma.$transaction(
-    async (tx) => {
-      for (const delivery of deliveries) {
-        await processDeliveryWithRetry(tx, delivery, MAX_RETRIES);
-      }
-    },
-    {
-      timeout: TRANSACTION_TIMEOUT, // Added timeout option
+async function processDeliveries(deliveries: DeliveryWithRider[], staleThreshold: Date): Promise<void> {
+  for (const delivery of deliveries) {
+    try {
+      await prisma.$transaction(async (tx) => {
+        await processDelivery(tx, delivery, staleThreshold);
+      }, { timeout: TRANSACTION_TIMEOUT });
+    } catch (error) {
+      console.error(`❌ Transaction failed for delivery ${delivery.id}:`, error);
     }
-  );
+  }
 }
 
-// Retry logic per delivery
-async function processDeliveryWithRetry(
+async function processDelivery(
   tx: Prisma.TransactionClient,
   delivery: DeliveryWithRider,
-  retriesLeft: number
+  staleThreshold: Date
 ): Promise<void> {
+  // Verify delivery is still stale and hasn't been updated
+  const currentDelivery = await tx.delivery.findUnique({
+    where: { id: delivery.id },
+    include: { assignedRider: true },
+  });
+
+  if (!currentDelivery) return;
+
+  if (currentDelivery.updatedAt > staleThreshold || 
+      !['assigned', 'unassigned', 'Pending'].includes(currentDelivery.deliveryStatus)) {
+    return;
+  }
+
+  const currentRetries = currentDelivery.retriesCount;
+  const newRetriesCount = currentRetries + 1;
+
   try {
-    const currentRiderId = delivery.assignedRiderId;
-    
-    if (currentRiderId) {
+    if (currentDelivery.assignedRiderId) {
       await tx.user.update({
-        where: { id: currentRiderId },
+        where: { id: currentDelivery.assignedRiderId },
         data: { status: 'available' },
       });
     }
 
-    const newRider: RiderResult | null = await getBestAvailableRider(delivery.id);
+    const newRider = await getBestAvailableRider(currentDelivery.id);
     const newRiderId = newRider?.id || null;
     const newStatus = newRiderId ? 'assigned' : 'unassigned';
 
     await tx.delivery.update({
-      where: { id: delivery.id },
+      where: { id: currentDelivery.id },
       data: {
         assignedRiderId: newRiderId,
         deliveryStatus: newStatus,
+        retriesCount: 0, // Reset retries on successful reassignment
         updatedAt: new Date(),
         statusLogs: {
           create: {
             status: newStatus,
             updatedById: newRiderId || SYSTEM_USER_ID,
             timestamp: new Date(),
-            remarks: generateRemarks(delivery, newRider),
+            remarks: generateRemarks(currentDelivery, newRider),
           },
         },
       },
     });
 
-    console.log(`Processed delivery ${delivery.id}. New rider: ${newRider?.name || 'None'}`);
+    console.log(`✅ Successfully reassigned delivery ${delivery.id}`);
   } catch (error) {
-    if (retriesLeft > 0) {
-      console.warn(`Retrying delivery ${delivery.id} (${retriesLeft} retries left)`);
-      await processDeliveryWithRetry(tx, delivery, retriesLeft - 1);
+    if (newRetriesCount >= MAX_RETRIES) {
+      await markDeliveryAsFailed(tx, currentDelivery.id);
     } else {
-      console.error(`❌ Failed to process delivery ${delivery.id} after ${MAX_RETRIES} attempts. Marking as failed.`);
       await tx.delivery.update({
-        where: { id: delivery.id },
-        data: {
-          deliveryStatus: 'failed',
-          updatedAt: new Date(),
-          statusLogs: {
-            create: {
-              status: 'failed',
-              updatedById: '686ffdf59a1ad0a2e9c79f0b',
-              timestamp: new Date(),
-              remarks: 'Automatically marked as failed after multiple reassignment attempts',
-            },
-          },
-        },
+        where: { id: currentDelivery.id },
+        data: { retriesCount: newRetriesCount },
       });
     }
+    throw error; // Throw to trigger transaction rollback
   }
 }
 
-// Remarks generator
-function generateRemarks(delivery: DeliveryWithRider, newRider: { id: string; name: string | null } | null): string {
+async function markDeliveryAsFailed(tx: Prisma.TransactionClient, deliveryId: string) {
+  await tx.delivery.update({
+    where: { id: deliveryId },
+    data: {
+      deliveryStatus: 'failed',
+      updatedAt: new Date(),
+      statusLogs: {
+        create: {
+          status: 'failed',
+          updatedById: SYSTEM_USER_ID,
+          timestamp: new Date(),
+          remarks: 'Automatically marked as failed after maximum reassignment attempts',
+        },
+      },
+    },
+  });
+}
+
+function generateRemarks(delivery: DeliveryWithRider, newRider: RiderResult | null): string {
   const currentRiderName = delivery.assignedRider?.name || 'unknown';
   const newRiderName = newRider?.name || 'none';
   
