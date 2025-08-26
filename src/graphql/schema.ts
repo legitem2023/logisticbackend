@@ -28,6 +28,7 @@ type User {
   email: String
   phoneNumber: String
   address: String
+  vehicleTypeId: String
   vehicleType: VehicleType
   licensePlate: String
   status: String
