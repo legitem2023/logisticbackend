@@ -155,6 +155,7 @@ async function markDeliveryAsFailed(tx: Prisma.TransactionClient, deliveryId: st
   await tx.delivery.update({
     where: { id: deliveryId },
     data: {
+      assignedRiderId:'',
       deliveryStatus: 'failed',
       updatedAt: new Date(),
       statusLogs: {
