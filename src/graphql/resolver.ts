@@ -538,6 +538,7 @@ if (!user) {
   });
 }
 
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
 
     // 3. Return encrypted JWT
     const token = await new EncryptJWT({
