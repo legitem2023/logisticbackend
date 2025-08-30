@@ -296,9 +296,6 @@ getRiders: async (_: any, _args: any) => {
         }
       });
 
-
-
-        
         return {
           statusText: "success",
           delivery
@@ -312,7 +309,7 @@ getRiders: async (_: any, _args: any) => {
         };
       }
     }, 
-    createSender: async (_: any, args: any) => {
+createSender: async (_: any, args: any) => {
       try {
         const {
           name,
@@ -351,7 +348,7 @@ getRiders: async (_: any, _args: any) => {
         };
       }
     },
-    createRider: async (_: any, args: any) => {
+createRider: async (_: any, args: any) => {
       try {
         const {
           name,
@@ -401,7 +398,7 @@ getRiders: async (_: any, _args: any) => {
         };
       }
     },
-    editRider: async (_: any, args: any) =>{
+editRider: async (_: any, args: any) =>{
       const {  id, name, email, phoneNumber, vehicleTypeId, licensePlate, role } = args.input;
       const result = await prisma.user.update({
         where:{
@@ -422,7 +419,7 @@ getRiders: async (_: any, _args: any) => {
         }
       }
     },
-    login: async (_: any, args: any) => {
+login: async (_: any, args: any) => {
     const { email, password } = args.input;
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -436,8 +433,6 @@ getRiders: async (_: any, _args: any) => {
     }
 
     const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
-
-
     // Use JOSE to create encrypted token (JWE)
     const token = await new EncryptJWT({
       userId: user.id,
@@ -457,7 +452,7 @@ getRiders: async (_: any, _args: any) => {
       token
     };
     },
-    loginWithGoogle: async (_: any, args: any) => {
+loginWithGoogle: async (_: any, args: any) => {
     const { idToken } = args.input;
     // Verify Google ID token
     const ticket = await client.verifyIdToken({
@@ -506,7 +501,7 @@ getRiders: async (_: any, _args: any) => {
       token
     };
     },
-    loginWithFacebook: async (_: any, args: any) => {
+loginWithFacebook: async (_: any, args: any) => {
     const { idToken } = args.input;
 
 // 1. Verify the token with Facebook Graph API
@@ -514,7 +509,6 @@ const fbRes = await fetch(
   `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${idToken}`
 );
 const fbUser = await fbRes.json();
-console.log(fbUser);
 if (!fbUser || !fbUser.id) {
   throw new Error('Invalid Facebook token');
 }
@@ -534,6 +528,7 @@ if (!user) {
       phoneNumber: '', // Facebook doesn't provide it
       passwordHash: '', // Use empty or a random placeholder
       image: avatarUrl,
+      role:'Sender'
     },
   });
 }
@@ -558,30 +553,6 @@ if (!user) {
       token
     };
     },
-    /*
-    locationTracking: async (_: any, args: any) => {
-     try {
-       
-    const { userID, latitude, longitude } = args.input;
-
-    await prisma.user.update({
-      where: { id: userID },
-      data: {
-        currentLatitude: latitude,
-        currentLongitude: longitude,
-        lastUpdatedAt: new Date(),
-      },
-    });
-  console.log(userID, latitude, longitude);
-    pubsub.publish('LOCATION_TRACKING', { LocationTracking: args.input });
-
-    return args.input;
-  } catch (error) {
-    console.log('Error updating location:', error);
-    throw new Error('Failed to update location');
-  }
-},
-*/
 locationTracking: async (_: any, args: any) => {
   try {
     const { userID, latitude, longitude } = args.input;
