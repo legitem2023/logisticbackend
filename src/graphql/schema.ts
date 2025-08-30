@@ -239,10 +239,14 @@ input ProcessGCashWebhookInput {
   status: TransactionStatus!
 }
 
-
+type AuthStatus {
+  authenticated: Boolean!
+  user: User
+}
 
 
 type Query {
+  authStatus: AuthStatus!
   getUsers: [User]
   getUser(id: String): User
   getDeliveries: [Delivery]
@@ -376,7 +380,14 @@ input ProofOfPickupInput {
   status: String
 }
 
+type LogoutResponse {
+  success: Boolean!
+  message: String!
+}
+
 type Mutation {
+  logout: LogoutResponse!
+  logoutAllDevices: LogoutResponse!
   insertPickupProof(input:ProofOfPickupInput):Result
   # GCash Payments
   initiateGCashPayment(input: InitiateGCashPaymentInput!): GCashPaymentResponse!
