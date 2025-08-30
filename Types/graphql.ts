@@ -1,4 +1,4 @@
-texport interface FacebookLoginInput {
+export interface FacebookLoginInput {
   idToken: string;
 }
 
