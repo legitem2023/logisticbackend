@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
 
-const verifyToken = async (token) => {
+const verifyToken = async (token:any) => {
   try {
     if (!token) return { valid: false };
 
