@@ -1,4 +1,4 @@
-import { jwtDecrypt } from 'jose',
+import { jwtDecrypt } from 'jose';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
