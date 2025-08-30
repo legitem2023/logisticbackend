@@ -8,8 +8,6 @@ import { notifier } from '../script/script.js';
 import { saveBase64Image } from '../script/saveBase64Image.js';
 import { v4 as uuidv4 } from 'uuid';
 //import { calculateEta, convertMinutesToHours } from '../script/calculateEta.js';
-import { cookies } from 'next/headers'
-import { getServerSession } from 'next-auth/next'
 
 import {
   FacebookLoginInput,
@@ -19,7 +17,7 @@ import {
   User,
   UserRole,
   Context
-} from '../../Types/graphql';
+} from '../../Types/graphql.js';
 import fs from 'fs';
 import path from 'path';
 
