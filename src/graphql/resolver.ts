@@ -24,7 +24,7 @@ import path from 'path';
 const prisma = new PrismaClient()
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { EncryptJWT } from 'jose';
+import { EncryptJWT, jwtDecrypt } from 'jose';
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const pubsub = new PubSub();
