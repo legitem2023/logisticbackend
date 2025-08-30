@@ -1,9 +1,17 @@
 import { jwtDecrypt } from 'jose';
 import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
 
-const verifyToken = async (token:any) => {
+// Define the expected token payload structure
+interface TokenPayload {
+  userId: string;
+  // Add other expected properties here if needed
+  [key: string]: unknown;
+}
+
+const verifyToken = async (token: string | undefined) => {
   try {
     if (!token) return { valid: false };
 
@@ -17,14 +25,17 @@ const verifyToken = async (token:any) => {
     // Decrypt and verify token
     const { payload } = await jwtDecrypt(token, secret);
     
+    // Type assertion to ensure payload has the expected structure
+    const tokenPayload = payload as TokenPayload;
+    
     // Check if user still exists
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId }
+      where: { id: tokenPayload.userId }
     });
 
     if (!user) return { valid: false };
 
-    return { valid: true, payload };
+    return { valid: true, payload: tokenPayload };
   } catch (error) {
     return { valid: false };
   }
@@ -48,4 +59,5 @@ const cleanupExpiredTokens = async () => {
   }
 };
 
-module.exports = { verifyToken, cleanupExpiredTokens };
+export { verifyToken, cleanupExpiredTokens };
+export type { TokenPayload };
