@@ -17,7 +17,7 @@ import {
   User,
   UserRole,
   Context
-} from '../../Types/graphql.js';
+} from './types/graphql.js';
 import fs from 'fs';
 import path from 'path';
 
