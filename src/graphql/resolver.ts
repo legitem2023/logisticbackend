@@ -632,8 +632,7 @@ if (!user) {
           message: 'Failed to logout from all devices'
         };
       }
-    }
-  },
+    },
   
 locationTracking: async (_: any, args: any) => {
   try {
