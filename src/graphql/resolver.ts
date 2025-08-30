@@ -8,7 +8,8 @@ import { notifier } from '../script/script.js';
 import { saveBase64Image } from '../script/saveBase64Image.js';
 import { v4 as uuidv4 } from 'uuid';
 //import { calculateEta, convertMinutesToHours } from '../script/calculateEta.js';
-
+import { cookies } from 'next/headers'
+import { getServerSession } from 'next-auth/next'
 
 
 import fs from 'fs';
@@ -553,6 +554,78 @@ if (!user) {
       token
     };
     },
+logout: async (_, __, context) => {
+      try {
+        const token = context.token;
+
+        if (!token) {
+          return {
+            success: false,
+            message: 'No authentication token provided'
+          };
+        }
+
+        // Decrypt token to get user info
+        const { payload } = await jwtDecrypt(token, secret);
+        
+        // Add token to blacklist (valid for 7 days)
+        await prisma.blacklistedToken.upsert({
+          where: { token },
+          update: { 
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) 
+          },
+          create: {
+            token,
+            userId: payload.userId,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          }
+        });
+
+        return {
+          success: true,
+          message: 'Successfully logged out'
+        };
+      } catch (error) {
+        console.error('Logout error:', error);
+        return {
+          success: false,
+          message: 'Failed to complete logout process'
+        };
+      }
+    },
+
+    logoutAllDevices: async (_, __, context) => {
+      try {
+        const token = context.token;
+
+        if (!token) {
+          return {
+            success: false,
+            message: 'No authentication token provided'
+          };
+        }
+
+        // Decrypt token to get user info
+        const { payload } = await jwtDecrypt(token, secret);
+        
+        // Blacklist all tokens for this user
+        await prisma.blacklistedToken.deleteMany({
+          where: { userId: payload.userId }
+        });
+
+        return {
+          success: true,
+          message: 'Logged out from all devices'
+        };
+      } catch (error) {
+        console.error('Logout all devices error:', error);
+        return {
+          success: false,
+          message: 'Failed to logout from all devices'
+        };
+      }
+    },
+  
 locationTracking: async (_: any, args: any) => {
   try {
     const { userID, latitude, longitude } = args.input;
