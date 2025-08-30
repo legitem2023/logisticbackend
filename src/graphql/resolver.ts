@@ -11,7 +11,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { cookies } from 'next/headers'
 import { getServerSession } from 'next-auth/next'
 
-
+import {
+  FacebookLoginInput,
+  LoginResponse,
+  LogoutResponse,
+  AuthStatus,
+  User,
+  UserRole,
+  Context
+} from '../../Types/graphql';
 import fs from 'fs';
 import path from 'path';
 
@@ -554,9 +562,9 @@ if (!user) {
       token
     };
     },
-logout: async (_, __, context) => {
+ logout: async (_: any, __: any, context: Context): Promise<LogoutResponse> => {
       try {
-        const token = context.token;
+        const { token } = context;
 
         if (!token) {
           return {
@@ -576,7 +584,7 @@ logout: async (_, __, context) => {
           },
           create: {
             token,
-            userId: payload.userId,
+            userId: payload.userId as string,
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
           }
         });
@@ -594,9 +602,9 @@ logout: async (_, __, context) => {
       }
     },
 
-    logoutAllDevices: async (_, __, context) => {
+    logoutAllDevices: async (_: any, __: any, context: Context): Promise<LogoutResponse> => {
       try {
-        const token = context.token;
+        const { token } = context;
 
         if (!token) {
           return {
@@ -610,7 +618,7 @@ logout: async (_, __, context) => {
         
         // Blacklist all tokens for this user
         await prisma.blacklistedToken.deleteMany({
-          where: { userId: payload.userId }
+          where: { userId: payload.userId as string }
         });
 
         return {
@@ -624,7 +632,8 @@ logout: async (_, __, context) => {
           message: 'Failed to logout from all devices'
         };
       }
-    },
+    }
+  },
   
 locationTracking: async (_: any, args: any) => {
   try {
