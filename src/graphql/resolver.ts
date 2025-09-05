@@ -129,10 +129,10 @@ export const resolvers = {
     getWallet: async (_:any,args:{ userId:string }) =>{
         const data = await prisma.wallet.findUnique({
           where: {
-            userId:userId
+            userId:args.userId
           },
           include:{
-            transaction:true
+            transactions:true
           }
         })
       if(data){
