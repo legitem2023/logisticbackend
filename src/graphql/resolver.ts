@@ -126,6 +126,19 @@ export const resolvers = {
 
       return data;
     },
+    getWallet: async (_:any,args:{ userId:string }) =>{
+        const data = await prisma.wallet.findUnique({
+          where: {
+            userId:userId
+          },
+          include:{
+            transaction:true
+          }
+        })
+      if(data){
+        return data;
+      }
+    },
     getVehicleTypes: async (_:any,_args:any) => {
       const data = await prisma.vehicleType.findMany();
       return data;
