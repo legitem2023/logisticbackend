@@ -1,0 +1,35 @@
+name: Mirror Repository Incremental
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  # change if your default branch is different
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the source repository
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.MIRROR_TOKEN_BACKEND }}  # PAT of legitem2023
+
+      # Step 2: Add mirror remote
+      - name: Add mirror remote
+        env:
+          MIRROR_TOKEN: ${{ secrets.MIRROR_TOKEN_BACKEND }}
+        run: |
+          git remote add mirror https://legitem2023:${MIRROR_TOKEN_BACKEND}@github.com/adivisojay-droid/logisticbackend.git
+
+      # Step 3: Push only branches and tags
+      - name: Push branches
+        run: |
+          git push mirror --all
+
+      - name: Push tags
+        run: |
+          git push mirror --tags
