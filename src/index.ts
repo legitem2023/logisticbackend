@@ -77,7 +77,8 @@ async function init() {
           'http://localhost:3001',
           'https://logisticfrontend.vercel.app',
           'https://logisticfrontend.onrender.com',
-          'https://logisticfrontend-beta.vercel.app'
+          'https://logisticfrontend-beta.vercel.app',
+          'https://adiviso.com'
         ];
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
