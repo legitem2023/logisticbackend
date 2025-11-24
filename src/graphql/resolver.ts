@@ -144,7 +144,7 @@ export const resolvers = {
       return data;
     },
 getRiders: async (_: any, _args: any) => {
-  const data = await prisma.user.findMany({
+  const data = await prisma.user.findMany(/*{
     where: {
       role: {
         equals: "rider",
@@ -160,7 +160,7 @@ getRiders: async (_: any, _args: any) => {
       currentLatitude: { not: null },
       currentLongitude: { not: null },
     }
-  });
+  }*/);
   return data;
 },
     getNotifications: async (_:any, args: { id: string }) => { 
