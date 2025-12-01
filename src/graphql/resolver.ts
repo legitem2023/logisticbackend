@@ -10,6 +10,21 @@ import { v4 as uuidv4 } from 'uuid';
 import { PasswordResetService } from '../services/PasswordResetService';
 import { EmailServiceConfig } from '../services/EmailService';
 
+
+// Define input types for TypeScript
+interface RequestPasswordResetInput {
+  email: string;
+}
+
+interface ResetPasswordInput {
+  token: string;
+  newPassword: string;
+}
+
+interface ValidateResetTokenInput {
+  token: string;
+}
+
 //import { calculateEta, convertMinutesToHours } from '../script/calculateEta.js';
 
 import {
