@@ -115,20 +115,13 @@ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
 
   // Create transporter for Google SMTP
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // Use TLS
-    requireTLS: true,
+    port: 465,
+    secure: true, // Use TLS
     auth: {
       user: gmailUser,
       pass: gmailPassword,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-    connectionTimeout: 20000, // 20 seconds
-    debug: process.env.NODE_ENV === 'development',
+    }
   });
 
   // Verify the connection first
