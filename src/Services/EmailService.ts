@@ -94,22 +94,18 @@ export class EmailService {
 private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
   const nodemailer = await import('nodemailer');
 
-  const transporter = nodemailer.createTransport({
-    host: "smtp.mail.yahoo.com", // Changed from "yahoo.com" to correct Yahoo SMTP server
-    port: 587,
-    secure: false, // true for port 465
-    auth: {
-      user: options.from,
-      pass: process.env.EMAIL_APIKEY, // Make sure this is a Yahoo APP PASSWORD, not your regular password
-    },
-    // Add these for better debugging and Yahoo compatibility
-    debug: true,
-    logger: true,
-    tls: {
-      rejectUnauthorized: false // Sometimes needed for Yahoo
-    }
-  });
-
+const transporter = nodemailer.createTransport({
+  host: "smtp.mail.yahoo.com",
+  port: 587,
+  secure: false,
+  requireTLS: true,
+  tls: { rejectUnauthorized: false },
+  auth: {
+    user: process.env.YAHOO_EMAIL,
+    pass: process.env.YAHOO_APP_PASSWORD,
+  },
+  connectionTimeout: 20000 // 20 seconds
+});
   // Verify the connection first
   try {
     console.log("Verifying Yahoo SMTP connection...");
