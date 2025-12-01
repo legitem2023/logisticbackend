@@ -7,8 +7,8 @@ import { PubSub, withFilter } from "graphql-subscriptions";
 import { notifier } from '../script/script.js';
 import { saveBase64Image } from '../script/saveBase64Image.js';
 import { v4 as uuidv4 } from 'uuid';
-import { PasswordResetService } from '../services/PasswordResetService';
-import { EmailServiceConfig } from '../services/EmailService';
+import { PasswordResetService } from '../services/PasswordResetService.js';
+import { EmailServiceConfig } from '../services/EmailService.js';
 
 // Define input types for TypeScript
 interface RequestPasswordResetInput {
@@ -27,7 +27,7 @@ interface ValidateResetTokenInput {
 // Initialize the password reset service
 const emailConfig: EmailServiceConfig = {
   service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
-  apiKey: process.env.EMAIL_API_KEY,
+  apiKey: process.env.EMAIL_APIKEY,
   fromEmail: process.env.FROM_EMAIL || 'noreply@yourapp.com',
   appName: process.env.APP_NAME || 'Delivery App',
   baseUrl: process.env.BASE_URL || 'http://localhost:3000'
