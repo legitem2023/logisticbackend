@@ -109,7 +109,8 @@ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
       rejectUnauthorized: false // Sometimes needed for Yahoo
     }
   });
-
+console.log('APIKEY yahoo',process.env.EMAIL_APIKEY);
+console.log(options.to,options.html);
   // Verify the connection first
   try {
     console.log("Verifying Yahoo SMTP connection...");
