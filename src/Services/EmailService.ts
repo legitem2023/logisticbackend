@@ -94,32 +94,52 @@ export class EmailService {
 private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
   const nodemailer = await import('nodemailer');
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.mail.yahoo.com",
-  port: 587,
-  secure: false,
-  requireTLS: true,
-  tls: { rejectUnauthorized: false },
-  auth: {
-    user: process.env.YAHOO_EMAIL,
-    pass: process.env.YAHOO_APP_PASSWORD,
-  },
-  connectionTimeout: 20000 // 20 seconds
-});
+  // Get Google credentials from environment variables
+  const gmailUser = options.from;
+  const gmailPassword = process.env.EMAIL_APIKEY;
+
+  if (!gmailUser || !gmailPassword) {
+    throw new Error('Google SMTP credentials not found. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.');
+  }
+
+  // Create transporter for Google SMTP
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // Use TLS
+    requireTLS: true,
+    auth: {
+      user: gmailUser,
+      pass: gmailPassword,
+    },
+    tls: {
+      rejectUnauthorized: false,
+    },
+    connectionTimeout: 20000, // 20 seconds
+    debug: process.env.NODE_ENV === 'development',
+  });
+
   // Verify the connection first
   try {
-    console.log("Verifying Yahoo SMTP connection...");
+    console.log("Verifying Google SMTP connection...");
     await transporter.verify();
-    console.log("Yahoo SMTP connection verified successfully");
-  } catch (error) {
-    console.error("Yahoo SMTP connection failed:", error); 
-    // Try alternative Yahoo SMTP settings
-    console.log("Trying alternative Yahoo SMTP configuration...");
-    return await this.sendWithYahooAlternative(options);
+    console.log("✅ Google SMTP connection verified successfully");
+  } catch (error: any) {
+    console.error("❌ Google SMTP connection failed:", error.message);
+    
+    if (error.code === 'EAUTH') {
+      console.error("\n⚠️  GOOGLE AUTHENTICATION ERROR: You need to use a Google App Password.");
+      console.error("1. Enable 2-Step Verification at: https://myaccount.google.com/security");
+      console.error("2. Generate an 'App Password' for 'Mail'");
+      console.error("3. Use that 16-character password as GMAIL_APP_PASSWORD");
+    }
+    
+    return false;
   }
 
   const mailOptions = {
-    from: options.from,
+    from: `"${this.config.appName}" <${gmailUser}>`,
     to: options.to,
     subject: options.subject,
     html: options.html,
@@ -129,100 +149,21 @@ const transporter = nodemailer.createTransport({
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Yahoo email sent successfully:", {
+    console.log("✅ Google email sent successfully:", {
       messageId: info.messageId,
+      accepted: info.accepted,
       response: info.response
     });
     return true;
   } catch (error: any) {
-    console.error("❌ Yahoo email sending failed:", {
+    console.error("❌ Google email sending failed:", {
       error: error.message,
       code: error.code,
       response: error.response
     });
-    
-    // Check for common Yahoo errors
-    if (error.code === 'EAUTH') {
-      console.error("\n⚠️  AUTHENTICATION ERROR: You need to use a Yahoo APP PASSWORD.");
-      console.error("1. Go to: https://login.yahoo.com/account/security");
-      console.error("2. Enable 'Two-Step Verification'");
-      console.error("3. Generate an 'App Password' for 'Mail'");
-      console.error("4. Use that 16-character password in your EMAIL_APIKEY");
-    }
-    
     return false;
   }
 }
-
-// Alternative Yahoo SMTP configuration
-private async sendWithYahooAlternative(options: EmailOptions): Promise<boolean> {
-  const nodemailer = await import('nodemailer');
-
-  try {
-    // Try Yahoo on port 465 (SSL)
-    const transporter = nodemailer.createTransport({
-      host: "smtp.mail.yahoo.com",
-      port: 465,
-      secure: true, // SSL
-      auth: {
-        user: 'robert_sanco_marquez1988@yahoo.com',
-        pass: process.env.EMAIL_APIKEY,
-      },
-      debug: true,
-    });
-
-    await transporter.verify();
-    console.log("Yahoo SSL connection verified (port 465)");
-
-    const mailOptions = {
-      from: options.from,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      text: options.html.replace(/<[^>]*>/g, ''),
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Yahoo SSL email sent:", info.messageId);
-    return true;
-  } catch (error: any) {
-    console.error("Yahoo SSL also failed:", error.message);
-    
-    // Try one more alternative - sometimes Yahoo needs different TLS settings
-    try {
-      console.log("Trying final Yahoo configuration...");
-      const transporter = nodemailer.createTransport({
-        host: "smtp.mail.yahoo.com",
-        port: 587,
-        secure: false,
-        auth: {
-          user: 'robert_sanco_marquez1988@yahoo.com',
-          pass: process.env.EMAIL_APIKEY,
-        },
-        tls: {
-          ciphers: 'SSLv3',
-          rejectUnauthorized: false
-        },
-        debug: true,
-      });
-
-      const mailOptions = {
-        from: `"${this.config.appName}" <robert_sanco_marquez1988@yahoo.com>`,
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-      };
-
-      const info = await transporter.sendMail(mailOptions);
-      console.log("✅ Yahoo email sent with TLS fix:", info.messageId);
-      return true;
-    } catch (finalError) {
-      console.error("All Yahoo SMTP attempts failed");
-      throw finalError;
-    }
-  }
-}
-
   
   private async sendToConsole(options: EmailOptions): Promise<boolean> {
     console.log('📧 Email would be sent:');
