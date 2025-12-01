@@ -70,35 +70,36 @@ export class EmailService {
     return response.ok;
   }
 
-  private async sendWithResend(options: EmailOptions): Promise<boolean> {
+private async sendWithResend(options: EmailOptions): Promise<boolean> {
   if (!this.config.apiKey) {
     throw new Error('Resend API key is required');
   }
 
-  const fromEmail = options.from || this.config.fromEmail;
-  if (!fromEmail) {
-    throw new Error('Resend requires a valid "from" email');
+  const fromEmail = options.from || "no-reply@adiviso.com"; // VERIFIED DOMAIN EMAIL
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${this.config.apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: `Adiviso App <${fromEmail}>`,
+        to: [options.to],
+        subject: options.subject,
+        html: options.html
+      })
+    });
+
+    const data = await response.json();
+    console.log("Resend response:", JSON.stringify(data, null, 2));
+
+    return response.ok;
+  } catch (error) {
+    console.error("Resend error:", error);
+    return false;
   }
-
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${this.config.apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from: `${this.config.appName} <${fromEmail}>`,
-      to: [options.to],
-      subject: options.subject,
-      html: options.html
-    })
-  });
-
-  // Resend responds with JSON; you can check for error messages too
-  const resJson = await response.json();
-  console.log("Resend response:", resJson);
-
-  return response.ok;
 }
 
 private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
