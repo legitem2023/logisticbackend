@@ -110,7 +110,7 @@ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
     }
   });
 console.log('APIKEY yahoo',process.env.EMAIL_APIKEY);
-console.log(options.to,options.html);
+console.log(options);
   // Verify the connection first
   try {
     console.log("Verifying Yahoo SMTP connection...");
