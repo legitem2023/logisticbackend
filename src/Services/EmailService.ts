@@ -91,13 +91,39 @@ export class EmailService {
     return response.ok;
   }
 
-  private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
+ /* private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
     // This would require nodemailer to be installed
     console.log('Nodemailer would send email to:', options.to);
     await new Promise(resolve => setTimeout(resolve, 500));
     return true;
-  }
+  }*/
+ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
+   const nodemailer = await import('nodemailer');
 
+  const transporter = nodemailer.createTransport({
+    host: "yahoo.com",
+    port: 587,
+    secure: false, // true for 465
+    auth: {
+      user: 'robert_sanco_marquez1988@yahoo.com',//process.env.SMTP_USER, // example: your Gmail
+      pass: process.env.EMAIL_APIKEY, // app password
+    },
+  });
+
+  const mailOptions = {
+    from: options.from || this.config.fromEmail,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log("Nodemailer sent email:", info.messageId);
+
+  return true;
+}
+
+  
   private async sendToConsole(options: EmailOptions): Promise<boolean> {
     console.log('📧 Email would be sent:');
     console.log('To:', options.to);
