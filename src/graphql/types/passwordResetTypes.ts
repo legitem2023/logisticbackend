@@ -1,6 +1,6 @@
 // src/graphql/types/passwordResetTypes.ts
-import { gql } from 'apollo-server-express';
-
+//import { gql } from 'apollo-server-express';
+import { gql } from 'graphql-tag';
 export const passwordResetTypeDefs = gql`
   type PasswordResetResult {
     success: Boolean!
