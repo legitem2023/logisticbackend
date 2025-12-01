@@ -1277,7 +1277,7 @@ locationTracking: async (_: any, args: any) => {
             message: 'If an account with that email exists, reset instructions have been sent'
           };
         }
-
+        console.log("From request reset", email);
         const result = await passwordResetService.requestPasswordReset(email);
         return result;
       } catch (error) {
