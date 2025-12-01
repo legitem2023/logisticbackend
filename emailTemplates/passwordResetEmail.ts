@@ -1,4 +1,4 @@
-// emailTemplates/passwordResetEmail.ts
+// src/emailTemplates/passwordResetEmail.ts
 export interface PasswordResetEmailProps {
   userEmail: string;
   resetLink: string;
@@ -190,7 +190,7 @@ export const generatePasswordResetEmail = ({
             }
             
             .email-title {
-                font-size: 24px;
+                fontSize: 24px;
             }
         }
     </style>
@@ -240,32 +240,6 @@ export const generatePasswordResetEmail = ({
             </div>
         </div>
     </div>
-</body>
-</html>
-  `;
-};
-
-export const generateWelcomeEmail = (userEmail: string, userName: string, appName: string = 'Our App'): string => {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: Arial, sans-serif; color: #374151; }
-    .header { background: linear-gradient(135deg, #065f46 0%, #047857 100%); padding: 40px; color: white; text-align: center; }
-    .content { padding: 30px; }
-    .button { background: #065f46; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>Welcome to ${appName}!</h1>
-  </div>
-  <div class="content">
-    <h2>Hello ${userName},</h2>
-    <p>Welcome to our platform! We're excited to have you on board.</p>
-    <a href="#" class="button">Get Started</a>
-  </div>
 </body>
 </html>
   `;
