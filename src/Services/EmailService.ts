@@ -99,7 +99,7 @@ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
     port: 587,
     secure: false, // true for port 465
     auth: {
-      user: 'robert_sanco_marquez1988@yahoo.com',
+      user: options.from,
       pass: process.env.EMAIL_APIKEY, // Make sure this is a Yahoo APP PASSWORD, not your regular password
     },
     // Add these for better debugging and Yahoo compatibility
@@ -109,23 +109,21 @@ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
       rejectUnauthorized: false // Sometimes needed for Yahoo
     }
   });
-console.log('APIKEY yahoo',process.env.EMAIL_APIKEY);
-console.log(options);
+
   // Verify the connection first
   try {
     console.log("Verifying Yahoo SMTP connection...");
     await transporter.verify();
     console.log("Yahoo SMTP connection verified successfully");
   } catch (error) {
-    console.error("Yahoo SMTP connection failed:", error);
-    
+    console.error("Yahoo SMTP connection failed:", error); 
     // Try alternative Yahoo SMTP settings
     console.log("Trying alternative Yahoo SMTP configuration...");
     return await this.sendWithYahooAlternative(options);
   }
 
   const mailOptions = {
-    from: `"${this.config.appName}" <robert_sanco_marquez1988@yahoo.com>`, // From must match Yahoo account
+    from: options.from,
     to: options.to,
     subject: options.subject,
     html: options.html,
@@ -181,7 +179,7 @@ private async sendWithYahooAlternative(options: EmailOptions): Promise<boolean> 
     console.log("Yahoo SSL connection verified (port 465)");
 
     const mailOptions = {
-      from: `"${this.config.appName}" <robert_sanco_marquez1988@yahoo.com>`,
+      from: options.from,
       to: options.to,
       subject: options.subject,
       html: options.html,
