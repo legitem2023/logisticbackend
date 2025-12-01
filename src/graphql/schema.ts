@@ -246,6 +246,8 @@ type AuthStatus {
 
 
 type Query {
+  passwordResetStats: PasswordResetStats!
+
   authStatus: AuthStatus!
   getUsers: [User]
   getUser(id: String): User
