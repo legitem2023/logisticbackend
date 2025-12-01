@@ -7,8 +7,8 @@ import { PubSub, withFilter } from "graphql-subscriptions";
 import { notifier } from '../script/script.js';
 import { saveBase64Image } from '../script/saveBase64Image.js';
 import { v4 as uuidv4 } from 'uuid';
-import { PasswordResetService } from '../../Services/PasswordResetService.js';
-import { EmailServiceConfig } from '../../Services/EmailService.js';
+import { PasswordResetService } from '../Services/PasswordResetService.js';
+import { EmailServiceConfig } from '../Services/EmailService.js';
 
 
 // Define input types for TypeScript
