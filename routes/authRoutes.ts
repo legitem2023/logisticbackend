@@ -1,7 +1,7 @@
 // routes/authRoutes.ts
 import { Request, Response, Router } from 'express';
-import { PasswordResetService } from '../services/passwordResetService';
-import { EmailServiceConfig } from '../services/emailService';
+import { PasswordResetService } from '../services/passwordResetService.js';
+import { EmailServiceConfig } from '../services/emailService.js';
 
 export class AuthRoutes {
   public router: Router;
