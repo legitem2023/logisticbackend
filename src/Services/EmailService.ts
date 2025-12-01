@@ -91,36 +91,141 @@ export class EmailService {
     return response.ok;
   }
 
- /* private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
-    // This would require nodemailer to be installed
-    console.log('Nodemailer would send email to:', options.to);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return true;
-  }*/
- private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
-   const nodemailer = await import('nodemailer');
+private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
+  const nodemailer = await import('nodemailer');
 
   const transporter = nodemailer.createTransport({
-    host: "yahoo.com",
+    host: "smtp.mail.yahoo.com", // Changed from "yahoo.com" to correct Yahoo SMTP server
     port: 587,
-    secure: false, // true for 465
+    secure: false, // true for port 465
     auth: {
-      user: 'robert_sanco_marquez1988@yahoo.com',//process.env.SMTP_USER, // example: your Gmail
-      pass: process.env.EMAIL_APIKEY, // app password
+      user: 'robert_sanco_marquez1988@yahoo.com',
+      pass: process.env.EMAIL_APIKEY, // Make sure this is a Yahoo APP PASSWORD, not your regular password
     },
+    // Add these for better debugging and Yahoo compatibility
+    debug: true,
+    logger: true,
+    tls: {
+      rejectUnauthorized: false // Sometimes needed for Yahoo
+    }
   });
 
+  // Verify the connection first
+  try {
+    console.log("Verifying Yahoo SMTP connection...");
+    await transporter.verify();
+    console.log("Yahoo SMTP connection verified successfully");
+  } catch (error) {
+    console.error("Yahoo SMTP connection failed:", error);
+    
+    // Try alternative Yahoo SMTP settings
+    console.log("Trying alternative Yahoo SMTP configuration...");
+    return await this.sendWithYahooAlternative(options);
+  }
+
   const mailOptions = {
-    from: options.from || this.config.fromEmail,
+    from: `"${this.config.appName}" <robert_sanco_marquez1988@yahoo.com>`, // From must match Yahoo account
     to: options.to,
     subject: options.subject,
     html: options.html,
+    // Add text version as fallback
+    text: options.html.replace(/<[^>]*>/g, ''),
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log("Nodemailer sent email:", info.messageId);
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Yahoo email sent successfully:", {
+      messageId: info.messageId,
+      response: info.response
+    });
+    return true;
+  } catch (error: any) {
+    console.error("❌ Yahoo email sending failed:", {
+      error: error.message,
+      code: error.code,
+      response: error.response
+    });
+    
+    // Check for common Yahoo errors
+    if (error.code === 'EAUTH') {
+      console.error("\n⚠️  AUTHENTICATION ERROR: You need to use a Yahoo APP PASSWORD.");
+      console.error("1. Go to: https://login.yahoo.com/account/security");
+      console.error("2. Enable 'Two-Step Verification'");
+      console.error("3. Generate an 'App Password' for 'Mail'");
+      console.error("4. Use that 16-character password in your EMAIL_APIKEY");
+    }
+    
+    return false;
+  }
+}
 
-  return true;
+// Alternative Yahoo SMTP configuration
+private async sendWithYahooAlternative(options: EmailOptions): Promise<boolean> {
+  const nodemailer = await import('nodemailer');
+
+  try {
+    // Try Yahoo on port 465 (SSL)
+    const transporter = nodemailer.createTransport({
+      host: "smtp.mail.yahoo.com",
+      port: 465,
+      secure: true, // SSL
+      auth: {
+        user: 'robert_sanco_marquez1988@yahoo.com',
+        pass: process.env.EMAIL_APIKEY,
+      },
+      debug: true,
+    });
+
+    await transporter.verify();
+    console.log("Yahoo SSL connection verified (port 465)");
+
+    const mailOptions = {
+      from: `"${this.config.appName}" <robert_sanco_marquez1988@yahoo.com>`,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.html.replace(/<[^>]*>/g, ''),
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("✅ Yahoo SSL email sent:", info.messageId);
+    return true;
+  } catch (error: any) {
+    console.error("Yahoo SSL also failed:", error.message);
+    
+    // Try one more alternative - sometimes Yahoo needs different TLS settings
+    try {
+      console.log("Trying final Yahoo configuration...");
+      const transporter = nodemailer.createTransport({
+        host: "smtp.mail.yahoo.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: 'robert_sanco_marquez1988@yahoo.com',
+          pass: process.env.EMAIL_APIKEY,
+        },
+        tls: {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false
+        },
+        debug: true,
+      });
+
+      const mailOptions = {
+        from: `"${this.config.appName}" <robert_sanco_marquez1988@yahoo.com>`,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log("✅ Yahoo email sent with TLS fix:", info.messageId);
+      return true;
+    } catch (finalError) {
+      console.error("All Yahoo SMTP attempts failed");
+      throw finalError;
+    }
+  }
 }
 
   
