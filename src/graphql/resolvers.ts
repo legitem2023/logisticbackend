@@ -28,9 +28,9 @@ interface ValidateResetTokenInput {
 const emailConfig: EmailServiceConfig = {
   service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
   apiKey: process.env.EMAIL_APIKEY,
-  fromEmail: process.env.FROM_EMAIL || 'noreply@yourapp.com',
-  appName: process.env.APP_NAME || 'Delivery App',
-  baseUrl: process.env.BASE_URL || 'http://localhost:3000'
+  fromEmail: process.env.FROM_EMAIL || 'noreply@adiviso.com',
+  appName: process.env.APP_NAME || 'Pramatiso Express',
+  baseUrl: process.env.BASE_URL || 'https://adiviso.com'
 };
 
 const passwordResetService = new PasswordResetService(emailConfig);
