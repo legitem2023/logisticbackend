@@ -16,7 +16,7 @@ import cookieParser from 'cookie-parser';
 import playground from 'graphql-playground-middleware-express';
 
 import { typeDefs } from './graphql/schema.js';
-import { resolvers } from './graphql/resolver.js';
+import { resolvers } from './graphql/resolvers.js';
 import { CronJob } from 'cron';
 import { reassignStaleDeliveries } from './script/reassignStaleDeliveries.js';
 import { markInactiveUsers } from './script/markInactiveUsers.js';
