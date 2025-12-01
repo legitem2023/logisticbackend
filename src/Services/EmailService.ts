@@ -75,7 +75,7 @@ private async sendWithResend(options: EmailOptions): Promise<boolean> {
     throw new Error('Resend API key is required');
   }
 
-  const fromEmail = options.from || "no-reply@adiviso.com"; // VERIFIED DOMAIN EMAIL
+  const fromEmail = options.from; // VERIFIED DOMAIN EMAIL
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
