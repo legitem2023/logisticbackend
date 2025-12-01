@@ -48,6 +48,7 @@ export class EmailService {
   }
 
   private async sendWithSendGrid(options: EmailOptions): Promise<boolean> {
+   
     if (!this.config.apiKey) {
       throw new Error('SendGrid API key is required');
     }
@@ -70,6 +71,7 @@ export class EmailService {
   }
 
   private async sendWithResend(options: EmailOptions): Promise<boolean> {
+   console.log(options.from,this.config.apiKey,this.config.service);
     if (!this.config.apiKey) {
       throw new Error('Resend API key is required');
     }
