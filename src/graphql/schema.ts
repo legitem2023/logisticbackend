@@ -423,6 +423,12 @@ type PasswordResetResult {
 
 
 type Mutation {
+  
+  requestPasswordReset(input: RequestPasswordResetInput!): PasswordResetResult!
+  resetPassword(input: ResetPasswordInput!): PasswordResetResult!
+  validateResetToken(input: ValidateResetTokenInput!): TokenValidationResult!
+  
+    
   logout: LogoutResponse!
   logoutAllDevices: LogoutResponse!
   insertPickupProof(input:ProofOfPickupInput):Result
