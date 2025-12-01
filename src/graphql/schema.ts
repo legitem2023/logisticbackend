@@ -385,6 +385,43 @@ type LogoutResponse {
   message: String!
 }
 
+
+
+
+
+
+
+type PasswordResetResult {
+    success: Boolean!
+    message: String!
+    token: String
+  }
+
+  type TokenValidationResult {
+    valid: Boolean!
+    email: String
+    message: String!
+  }
+
+  type PasswordResetStats {
+    activeTokens: Int!
+  }
+
+  input RequestPasswordResetInput {
+    email: String!
+  }
+
+  input ResetPasswordInput {
+    token: String!
+    newPassword: String!
+  }
+
+  input ValidateResetTokenInput {
+    token: String!
+  }
+
+
+
 type Mutation {
   logout: LogoutResponse!
   logoutAllDevices: LogoutResponse!
