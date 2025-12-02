@@ -1318,23 +1318,29 @@ locationTracking: async (_: any, args: any) => {
         );
       }
     },
-    editpassword:async (_:any,args:any) =>{
-    const email = args.email;
-    const newpassword = args.password;
-    const passwordHash = await encryptPassword(args.password, 10);
+editpassword: async (_: any, args: any) => {
+  const email = args.email;
+  const newpassword = args.password;
+  const passwordHash = await encryptPassword(args.password, 10);
 
-      const result = await prisma.user.update({
-       where: { email },
-       data:{
-          passwordHash
-       }
-     })
-      if(result){
-        return {
-          statusText:'Successful';
-        }
-      }
-    },
+  const result = await prisma.user.update({
+    where: { email },
+    data: {
+      passwordHash
+    }
+  });
+  
+  if (result) {
+    return {
+      statusText: 'Successful'  // Changed from semicolon to comma
+    };
+  }
+  
+  // Return an error object if the update failed
+  return {
+    statusText: 'Failed to update password'
+  };
+},
     validateResetToken: async (_: any, { input }: { input: ValidateResetTokenInput }) => {
       try {
         const { token } = input;
