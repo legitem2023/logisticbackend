@@ -1318,7 +1318,16 @@ locationTracking: async (_: any, args: any) => {
         );
       }
     },
-
+    editpassword:async (_:any,args:any) =>{
+    const email = args.email;
+    const newpassword = args.password;
+    /* return await prisma.user.update({
+       where: { email:email },
+       data:{
+          
+       }
+     })*/
+    },
     validateResetToken: async (_: any, { input }: { input: ValidateResetTokenInput }) => {
       try {
         const { token } = input;
