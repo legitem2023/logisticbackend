@@ -426,7 +426,7 @@ type PasswordResetResult {
 
 type Mutation {
   editpassword(email:String,password:String):Result
-  requestPasswordReset(input: RequestPasswordResetInput!): PasswordResetResult!
+  requestPasswordReset(input: RequestPasswordResetInput!):Result
   resetPassword(input: ResetPasswordInput!): PasswordResetResult!
   validateResetToken(input: ValidateResetTokenInput!): TokenValidationResult!
   
