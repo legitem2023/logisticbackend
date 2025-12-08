@@ -1273,13 +1273,17 @@ locationTracking: async (_: any, args: any) => {
         if (!user) {
           // For security, don't reveal that the email doesn't exist
           return {
-            success: true,
-            message: 'If an account with that email exists, reset instructions have been sent'
+            statusText: 'If an account with that email exists, reset instructions have been sent'
           };
         }
        // console.log("From request reset", email);
-        const result = await passwordResetService.requestPasswordReset(email);
-        return result;
+       // const result = await passwordResetService.requestPasswordReset(email);
+      //  return result;
+        if(user) {
+          return {
+            statusText:"Successful"
+          }
+        }
       } catch (error) {
         console.error('Error in requestPasswordReset resolver:', error);
         throw new Error(
