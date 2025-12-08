@@ -1256,41 +1256,40 @@ locationTracking: async (_: any, args: any) => {
       };
     },
 
-    // Password Reset Mutations
     requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
-      try {
-        const { email } = input;
+  try {
+    const { email } = input;
 
-        if (!email) {
-          throw new Error('Email is required');
-        }
+    if (!email) {
+      return {
+        statusText: 'Failed'
+      };
+    }
 
-        // Check if user exists with this email
-        const user = await prisma.user.findUnique({
-          where: { email }
-        });
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
 
-        if (!user) {
-          // For security, don't reveal that the email doesn't exist
-          return {
-            statusText: 'If an account with that email exists, reset instructions have been sent'
-          };
-        }
-       // console.log("From request reset", email);
-       // const result = await passwordResetService.requestPasswordReset(email);
-      //  return result;
-        if(user) {
-          return {
-            statusText:"Successful"
-          }
-        }
-      } catch (error) {
-        console.error('Error in requestPasswordReset resolver:', error);
-        throw new Error(
-          error instanceof Error ? error.message : 'Failed to request password reset'
-        );
-      }
-    },
+    // For security, always return the same message regardless of whether user exists
+    const successMessage = 'Success';
+    
+    if (!user) {
+      return {
+        statusText: "Email address not registered!"
+      };
+    }else {
+    // Return the result from the service or success message
+       return {
+         statusText: "Success"
+       };  
+    }
+  } catch (error) {
+    console.error('Error in requestPasswordReset resolver:', error);
+    return {
+      statusText: 'Failed'
+    };
+  }
+},
 
     resetPassword: async (_: any, { input }: { input: ResetPasswordInput }) => {
       try {
