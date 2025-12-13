@@ -4,13 +4,15 @@ export interface PasswordResetEmailProps {
   resetLink: string;
   expiryTime?: string;
   appName?: string;
+  logoUrl?: string; // Added logo URL parameter
 }
 
 export const generatePasswordResetEmail = ({
   userEmail,
   resetLink,
   expiryTime = '1 hour',
-  appName = 'Our App'
+  appName = 'Pramatiso Express',
+  logoUrl = 'https://adiviso.com/Motogo.svg' // Default logo URL
 }: PasswordResetEmailProps): string => {
   return `
 <!DOCTYPE html>
@@ -18,7 +20,7 @@ export const generatePasswordResetEmail = ({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Your Password</title>
+    <title>Reset Your Password - Pramatiso Express</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -47,41 +49,54 @@ export const generatePasswordResetEmail = ({
             border: 1px solid #d1fae5;
         }
         
+        /* HEADER STYLE - Matching your Navigation component */
         .email-header {
-            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-            padding: 40px 30px;
-            text-align: center;
+            background: linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(20, 20, 30, 0.98) 50%, rgba(10, 10, 20, 0.98) 100%);
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 15px rgba(255, 215, 0, 0.15);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .logo-image-container {
             position: relative;
-            overflow: hidden;
+            height: 60px;
+            width: 60px;
+            margin-right: 15px;
         }
         
-        .email-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23059661"><polygon points="0,0 1000,40 1000,100 0,100" /></svg>') no-repeat;
-            background-size: cover;
-            opacity: 0.3;
+        .logo-image {
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
         
-        .email-title {
+        .logo-text-container {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo-title {
             font-size: 28px;
             font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 2;
+            background: linear-gradient(135deg, #FDF6B2 0%, #FCE96A 25%, #FACA15 50%, #E3A008 75%, #C27803 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
         }
         
-        .email-subtitle {
-            font-size: 16px;
-            color: #d1fae5;
-            font-weight: 400;
-            position: relative;
-            z-index: 2;
+        .logo-subtitle {
+            font-size: 11px;
+            color: #FACA15;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            margin-top: 2px;
+            text-transform: uppercase;
         }
         
         .email-content {
@@ -115,11 +130,18 @@ export const generatePasswordResetEmail = ({
             margin: 24px 0;
             box-shadow: 0 4px 12px rgba(5, 95, 70, 0.3);
             transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
         }
         
         .reset-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(5, 95, 70, 0.4);
+        }
+        
+        .reset-button:active {
+            transform: translateY(0);
         }
         
         .info-box {
@@ -133,7 +155,7 @@ export const generatePasswordResetEmail = ({
         .info-title {
             font-weight: 600;
             color: #065f46;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             font-size: 14px;
         }
         
@@ -141,13 +163,60 @@ export const generatePasswordResetEmail = ({
             color: #047857;
             font-size: 14px;
             line-height: 1.5;
+            margin-bottom: 15px;
         }
         
-        .link-alternative {
+        .link-container {
+            background: white;
+            border: 1px solid #a7f3d0;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 12px 0;
             word-break: break-all;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
             color: #065f46;
-            text-decoration: none;
-            font-size: 14px;
+            position: relative;
+            padding-right: 110px;
+        }
+        
+        .copy-button {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .copy-button:hover {
+            background: linear-gradient(135deg, #054732 0%, #036449 100%);
+        }
+        
+        .copy-button.copied {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        
+        .status-message {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 13px;
+            font-weight: 500;
+            min-height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .status-message.show {
+            opacity: 1;
         }
         
         .expiry-notice {
@@ -186,20 +255,65 @@ export const generatePasswordResetEmail = ({
             }
             
             .email-header {
-                padding: 30px 20px;
+                padding: 15px 20px;
             }
             
-            .email-title {
-                fontSize: 24px;
+            .logo-image-container {
+                height: 50px;
+                width: 50px;
+                margin-right: 12px;
+            }
+            
+            .logo-title {
+                font-size: 24px;
+            }
+            
+            .link-container {
+                padding-right: 100px;
+                font-size: 12px;
+            }
+            
+            .copy-button {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .link-container {
+                padding-right: 90px;
+            }
+            
+            .logo-image-container {
+                height: 45px;
+                width: 45px;
+            }
+            
+            .logo-title {
+                font-size: 22px;
             }
         }
     </style>
 </head>
 <body>
     <div class="email-container">
+        <!-- HEADER SECTION - Matches your Navigation style with logo image -->
         <div class="email-header">
-            <h1 class="email-title">Reset Your Password</h1>
-            <p class="email-subtitle">Secure your account with a new password</p>
+            <div class="logo-container">
+                <!-- Logo Image - Using the same image as your Navigation component -->
+                <div class="logo-image-container">
+                    <img src="${logoUrl}" 
+                         alt="Pramatiso Logo" 
+                         class="logo-image"
+                         style="height: 100%; width: 100%;">
+                </div>
+                
+                <!-- Logo Text -->
+                <div class="logo-text-container">
+                    <div class="logo-title">Pramatiso</div>
+                    <div class="logo-subtitle">Express Delivery</div>
+                </div>
+            </div>
         </div>
         
         <div class="email-content">
@@ -227,7 +341,15 @@ export const generatePasswordResetEmail = ({
                 <p class="info-text">
                     Copy and paste this link into your browser:
                 </p>
-                <a href="${resetLink}" class="link-alternative">${resetLink}</a>
+                
+                <div class="link-container">
+                    ${resetLink}
+                    <button class="copy-button" onclick="copyResetLink()">
+                        Copy Link
+                    </button>
+                </div>
+                
+                <div class="status-message" id="copyStatus"></div>
             </div>
             
             <p class="message">
@@ -240,6 +362,111 @@ export const generatePasswordResetEmail = ({
             </div>
         </div>
     </div>
+    
+    <script>
+        function copyResetLink() {
+            const resetLink = "${resetLink}";
+            const copyButton = event.target;
+            const statusMessage = document.getElementById('copyStatus');
+            
+            // Create a temporary textarea element
+            const textArea = document.createElement('textarea');
+            textArea.value = resetLink;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            
+            // Select and copy the text
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                
+                if (successful) {
+                    // Show success state
+                    copyButton.textContent = 'Copied!';
+                    copyButton.classList.add('copied');
+                    
+                    statusMessage.textContent = '✓ Link copied to clipboard!';
+                    statusMessage.style.color = '#059669';
+                    statusMessage.classList.add('show');
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        copyButton.textContent = 'Copy Link';
+                        copyButton.classList.remove('copied');
+                    }, 2000);
+                    
+                    // Hide status message after 3 seconds
+                    setTimeout(() => {
+                        statusMessage.classList.remove('show');
+                        setTimeout(() => {
+                            statusMessage.textContent = '';
+                        }, 300);
+                    }, 3000);
+                } else {
+                    throw new Error('Copy command failed');
+                }
+            } catch (err) {
+                // Fallback for browsers that don't support execCommand
+                try {
+                    navigator.clipboard.writeText(resetLink).then(() => {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.classList.add('copied');
+                        
+                        statusMessage.textContent = '✓ Link copied to clipboard!';
+                        statusMessage.style.color = '#059669';
+                        statusMessage.classList.add('show');
+                        
+                        setTimeout(() => {
+                            copyButton.textContent = 'Copy Link';
+                            copyButton.classList.remove('copied');
+                        }, 2000);
+                        
+                        setTimeout(() => {
+                            statusMessage.classList.remove('show');
+                            setTimeout(() => {
+                                statusMessage.textContent = '';
+                            }, 300);
+                        }, 3000);
+                    }).catch(fallbackCopy);
+                } catch (err) {
+                    fallbackCopy();
+                }
+            } finally {
+                // Clean up
+                document.body.removeChild(textArea);
+            }
+            
+            function fallbackCopy() {
+                // Last resort fallback
+                copyButton.textContent = 'Click to select';
+                copyButton.classList.remove('copied');
+                
+                // Select the text in the container
+                const linkContainer = copyButton.parentElement;
+                const range = document.createRange();
+                range.selectNodeContents(linkContainer.firstChild);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                statusMessage.textContent = 'Text selected. Press Ctrl+C to copy.';
+                statusMessage.style.color = '#92400e';
+                statusMessage.classList.add('show');
+                
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy Link';
+                    statusMessage.classList.remove('show');
+                    setTimeout(() => {
+                        statusMessage.textContent = '';
+                    }, 300);
+                }, 3000);
+            }
+        }
+    </script>
 </body>
 </html>
   `;
