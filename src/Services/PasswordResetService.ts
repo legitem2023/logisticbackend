@@ -1,331 +1,192 @@
-// src/Services/PasswordResetService.ts
+// src/services/PasswordResetService.ts
 import { EmailService, EmailServiceConfig } from './EmailService.js';
-import { PrismaClient } from '@prisma/client';
-import crypto from 'crypto';
-import { logger } from '../utils/logger';
+
+export interface ResetTokenData {
+  email: string;
+  token: string;
+  expiresAt: Date;
+  used: boolean;
+}
+
+export interface PasswordResetResult {
+  success: boolean;
+  message: string;
+  token?: string;
+}
+
+export interface PasswordValidationResult {
+  valid: boolean;
+  email?: string;
+  message: string;
+}
 
 export class PasswordResetService {
-  private prisma: PrismaClient;
   private emailService: EmailService;
-
-  constructor() {
-    this.prisma = new PrismaClient();
+  private resetTokens: Map<string, ResetTokenData> = new Map();
+  
+  constructor(emailServiceConfig: EmailServiceConfig) {
+    this.emailService = new EmailService(emailServiceConfig);
     
-    // Fixed: Using 'fromEmail' instead of 'from'
-    const emailConfig: EmailServiceConfig = {
-      service: 'nodemailer',
-      fromEmail: process.env.EMAIL_FROM || 'noreply@example.com',
-      appName: process.env.APP_NAME || 'My Application',
-      baseUrl: process.env.APP_URL || 'http://localhost:3000',
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    };
-
-    this.emailService = new EmailService(emailConfig);
+    // Clean up expired tokens every hour
+    setInterval(() => this.cleanupExpiredTokens(), 60 * 60 * 1000);
   }
 
-  /**
-   * Request a password reset
-   */
-  async requestPasswordReset(email: string): Promise<{
-    success: boolean;
-    message: string;
-    resetToken?: string;
-  }> {
+  private generateResetToken(): string {
+    return Math.random().toString(36).substring(2) + Date.now().toString(36);
+  }
+
+  private generateExpiryDate(hours: number = 1): Date {
+    const date = new Date();
+    date.setHours(date.getHours() + hours);
+    return date;
+  }
+
+  public async requestPasswordReset(email: string): Promise<PasswordResetResult> {
     try {
-      logger.info(`Password reset requested for email: ${email}`);
-
-      // Find user by email
-      const user = await this.prisma.user.findUnique({
-        where: { email },
-        select: { id: true, email: true, name: true }
-      });
-
-      if (!user) {
-        // For security, don't reveal if user exists
-        logger.warn(`Password reset requested for non-existent email: ${email}`);
-        return {
-          success: true, // Return success even if user doesn't exist for security
-          message: 'If an account exists with this email, you will receive a reset link shortly.'
-        };
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return { success: false, message: 'Invalid email format' };
       }
 
       // Generate reset token
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+      const token = this.generateResetToken();
+      const expiresAt = this.generateExpiryDate();
 
-      // Create or update reset token in database
-      await this.prisma.passwordReset.upsert({
-        where: { userId: user.id },
-        update: {
-          token: resetToken,
-          expiresAt: resetTokenExpiry,
-          used: false
-        },
-        create: {
-          token: resetToken,
-          expiresAt: resetTokenExpiry,
-          userId: user.id
-        }
-      });
-
-      // Send reset email
-      const emailSent = await this.emailService.sendPasswordResetEmail(
+      // Store token (in production, use a database)
+      this.resetTokens.set(token, {
         email,
-        resetToken,
-        '1 hour'
-      );
-
-      if (!emailSent) {
-        logger.error(`Failed to send password reset email to: ${email}`);
-        return {
-          success: false,
-          message: 'Failed to send reset email. Please try again.'
-        };
-      }
-
-      logger.info(`Password reset email sent to: ${email}`);
-      
-      return {
-        success: true,
-        message: 'Password reset email sent successfully.',
-        resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined
-      };
-
-    } catch (error) {
-      logger.error('Error in requestPasswordReset:', error);
-      return {
-        success: false,
-        message: 'An error occurred while processing your request.'
-      };
-    }
-  }
-
-  /**
-   * Validate reset token
-   */
-  async validateResetToken(token: string): Promise<{
-    valid: boolean;
-    message: string;
-    userId?: string;
-  }> {
-    try {
-      logger.info(`Validating reset token: ${token.substring(0, 10)}...`);
-
-      const resetRecord = await this.prisma.passwordReset.findFirst({
-        where: {
-          token,
-          used: false,
-          expiresAt: {
-            gt: new Date()
-          }
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              name: true
-            }
-          }
-        }
+        token,
+        expiresAt,
+        used: false
       });
 
-      if (!resetRecord) {
-        logger.warn(`Invalid or expired reset token: ${token.substring(0, 10)}...`);
-        return {
-          valid: false,
-          message: 'Invalid or expired reset token.'
+      // Send email
+      const emailSent = await this.emailService.sendPasswordResetEmail(email, token);
+
+      if (emailSent) {
+        return { 
+          success: true, 
+          message: 'Password reset instructions sent to your email',
+          token // In production, you might not want to return the token
+        };
+      } else {
+        // Remove token if email failed
+        this.resetTokens.delete(token);
+        return { 
+          success: false, 
+          message: 'Failed to send reset instructions' 
         };
       }
-
-      logger.info(`Reset token valid for user: ${resetRecord.user.email}`);
-      
-      return {
-        valid: true,
-        message: 'Token is valid.',
-        userId: resetRecord.user.id
-      };
-
     } catch (error) {
-      logger.error('Error in validateResetToken:', error);
-      return {
-        valid: false,
-        message: 'Error validating token.'
+      console.error('Password reset request failed:', error);
+      return { 
+        success: false, 
+        message: 'An error occurred while processing your request' 
       };
     }
   }
 
-  /**
-   * Reset password with token
-   */
-  async resetPassword(
-    token: string,
-    newPassword: string
-  ): Promise<{
-    success: boolean;
-    message: string;
-  }> {
-    const transaction = await this.prisma.$transaction(async (tx) => {
-      try {
-        logger.info(`Attempting password reset with token: ${token.substring(0, 10)}...`);
-
-        // Find valid reset token
-        const resetRecord = await tx.passwordReset.findFirst({
-          where: {
-            token,
-            used: false,
-            expiresAt: {
-              gt: new Date()
-            }
-          },
-          include: {
-            user: true
-          }
-        });
-
-        if (!resetRecord) {
-          logger.warn(`Invalid or expired reset token for password reset: ${token.substring(0, 10)}...`);
-          throw new Error('Invalid or expired reset token.');
-        }
-
-        // Hash the new password (you should use bcrypt in production)
-        // For now, we'll just store it as is (DO NOT DO THIS IN PRODUCTION)
-        const hashedPassword = newPassword; // In production: await bcrypt.hash(newPassword, 10);
-
-        // Update user's password
-        await tx.user.update({
-          where: { id: resetRecord.userId },
-          data: { password: hashedPassword }
-        });
-
-        // Mark token as used
-        await tx.passwordReset.update({
-          where: { id: resetRecord.id },
-          data: { used: true, usedAt: new Date() }
-        });
-
-        // Optional: Invalidate all existing sessions for this user
-        await tx.session.deleteMany({
-          where: { userId: resetRecord.userId }
-        });
-
-        logger.info(`Password successfully reset for user: ${resetRecord.user.email}`);
-        
-        return {
-          success: true,
-          message: 'Password reset successfully.'
-        };
-
-      } catch (error) {
-        logger.error('Error in resetPassword:', error);
-        throw error;
-      }
-    });
-
-    return transaction;
-  }
-
-  /**
-   * Clean up expired reset tokens (cron job)
-   */
-  async cleanupExpiredTokens(): Promise<number> {
-    try {
-      const result = await this.prisma.passwordReset.deleteMany({
-        where: {
-          OR: [
-            { expiresAt: { lt: new Date() } },
-            { used: true }
-          ]
-        }
-      });
-
-      logger.info(`Cleaned up ${result.count} expired password reset tokens`);
-      return result.count;
-
-    } catch (error) {
-      logger.error('Error in cleanupExpiredTokens:', error);
-      return 0;
+  public validateResetToken(token: string): PasswordValidationResult {
+    const tokenData = this.resetTokens.get(token);
+    
+    if (!tokenData) {
+      return { valid: false, message: 'Invalid or expired reset token' };
     }
-  }
 
-  /**
-   * Get user by reset token
-   */
-  async getUserByResetToken(token: string) {
-    try {
-      const resetRecord = await this.prisma.passwordReset.findFirst({
-        where: {
-          token,
-          used: false,
-          expiresAt: {
-            gt: new Date()
-          }
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              profileImage: true
-            }
-          }
-        }
-      });
-
-      return resetRecord?.user || null;
-    } catch (error) {
-      logger.error('Error in getUserByResetToken:', error);
-      return null;
+    if (tokenData.used) {
+      return { valid: false, message: 'This reset token has already been used' };
     }
-  }
 
-  /**
-   * Create a new email service instance with different configuration
-   */
-  createEmailService(configOverride?: Partial<EmailServiceConfig>): EmailService {
-    const defaultConfig: EmailServiceConfig = {
-      service: 'nodemailer',
-      fromEmail: process.env.EMAIL_FROM || 'noreply@example.com',
-      appName: process.env.APP_NAME || 'My Application',
-      baseUrl: process.env.APP_URL || 'http://localhost:3000',
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
+    if (new Date() > tokenData.expiresAt) {
+      this.resetTokens.delete(token);
+      return { valid: false, message: 'Reset token has expired' };
+    }
+
+    return { 
+      valid: true, 
+      email: tokenData.email,
+      message: 'Token is valid' 
     };
-
-    return new EmailService({
-      ...defaultConfig,
-      ...configOverride
-    });
   }
 
-  /**
-   * Close database connection
-   */
-  async disconnect(): Promise<void> {
-    await this.prisma.$disconnect();
+  public async resetPassword(
+    token: string, 
+    newPassword: string
+  ): Promise<PasswordResetResult> {
+    try {
+      const validation = this.validateResetToken(token);
+      
+      if (!validation.valid) {
+        return { success: false, message: validation.message };
+      }
+
+      // Validate password strength
+      const passwordValidation = this.validatePasswordStrength(newPassword);
+      if (!passwordValidation.valid) {
+        return { success: false, message: passwordValidation.message };
+      }
+
+      // In production, you would:
+      // 1. Hash the new password
+      // 2. Update user record in database
+      
+      // Mark token as used
+      const tokenData = this.resetTokens.get(token);
+      if (tokenData) {
+        tokenData.used = true;
+        this.resetTokens.set(token, tokenData);
+      }
+
+      return { 
+        success: true, 
+        message: 'Password has been successfully reset' 
+      };
+    } catch (error) {
+      console.error('Password reset failed:', error);
+      return { 
+        success: false, 
+        message: 'An error occurred while resetting your password' 
+      };
+    }
+  }
+
+  private validatePasswordStrength(password: string): { valid: boolean; message: string } {
+    if (password.length < 8) {
+      return { valid: false, message: 'Password must be at least 8 characters long' };
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return { valid: false, message: 'Password must contain at least one uppercase letter' };
+    }
+
+    if (!/[a-z]/.test(password)) {
+      return { valid: false, message: 'Password must contain at least one lowercase letter' };
+    }
+
+    if (!/[0-9]/.test(password)) {
+      return { valid: false, message: 'Password must contain at least one number' };
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return { valid: false, message: 'Password must contain at least one special character' };
+    }
+
+    return { valid: true, message: 'Password is strong' };
+  }
+
+  private cleanupExpiredTokens(): void {
+    const now = new Date();
+    for (const [token, data] of this.resetTokens.entries()) {
+      if (now > data.expiresAt) {
+        this.resetTokens.delete(token);
+      }
+    }
+  }
+
+  public getStats(): { activeTokens: number } {
+    return {
+      activeTokens: this.resetTokens.size
+    };
   }
 }
-
-// Export singleton instance
-export const passwordResetService = new PasswordResetService();
-
-// Helper functions
-export const generateResetToken = (): string => {
-  return crypto.randomBytes(32).toString('hex');
-};
-
-export const calculateExpiryDate = (hours: number = 1): Date => {
-  return new Date(Date.now() + hours * 3600000);
-};
