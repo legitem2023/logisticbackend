@@ -51,12 +51,12 @@ export const generatePasswordResetEmail = ({
         
         /* HEADER STYLE - Matching your Navigation component */
         .email-header {
-            background: linear-gradient(135deg, rgba(10, 10, 20, 0.98) 0%, rgba(20, 20, 30, 0.98) 50%, rgba(10, 10, 20, 0.98) 100%);
-            padding: 20px 30px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 15px rgba(255, 215, 0, 0.15);
+           background: #088936;
+           background: linear-gradient(301deg, rgba(8, 137, 54, 1) 0%, rgba(0, 44, 16, 1) 50%);
+           padding: 20px 30px;
+           border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 15px rgba(255, 215, 0, 0.15);
         }
-        
         .logo-container {
             display: flex;
             align-items: center;
@@ -311,7 +311,7 @@ export const generatePasswordResetEmail = ({
                 <!-- Logo Text -->
                 <div class="logo-text-container">
                     <div class="logo-title">Pramatiso</div>
-                    <div class="logo-subtitle">Express Delivery</div>
+                    <div class="logo-subtitle">Express</div>
                 </div>
             </div>
         </div>
