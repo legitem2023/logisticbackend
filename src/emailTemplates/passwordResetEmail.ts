@@ -12,7 +12,7 @@ export const generatePasswordResetEmail = ({
   resetLink,
   expiryTime = '1 hour',
   appName = 'Pramatiso Express',
-  logoUrl = 'https://adiviso.com/Motogo.svg' // Default logo URL
+  logoUrl = 'https://adiviso.com/Motogo.png' // Default logo URL
 }: PasswordResetEmailProps): string => {
   return `
 <!DOCTYPE html>
