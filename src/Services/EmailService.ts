@@ -192,7 +192,7 @@ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
       resetLink,
       expiryTime,
       appName: this.config.appName,
-      logoUrl:'https://adiviso.com/Motogo.svg'
+      logoUrl:'https://adiviso.com/Motogo.png'
     });
 
     const emailOptions: EmailOptions = {
