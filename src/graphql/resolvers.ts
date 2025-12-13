@@ -1257,8 +1257,7 @@ locationTracking: async (_: any, args: any) => {
     },
 
 
-requestPasswordReset: async (_: any, { input }: { input:any }) => {
-equestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
+ requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
       try {
         const { email } = input;
 
