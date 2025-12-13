@@ -1258,54 +1258,36 @@ locationTracking: async (_: any, args: any) => {
 
 
 requestPasswordReset: async (_: any, { input }: { input:any }) => {
-  try {
-    const { email } = input;
+equestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
+      try {
+        const { email } = input;
 
-    if (!email) {
-      return {
-        statusText: 'Failed',
-        message: 'Email is required'
-      };
-    }
+        if (!email) {
+          throw new Error('Email is required');
+        }
 
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
+        // Check if user exists with this email
+        const user = await prisma.user.findUnique({
+          where: { email }
+        });
 
-    // For security, always return the same message regardless of whether user exists
-    const securityMessage = 'If an account with that email exists, a password reset link has been sent.';
-    
-    if (!user) {
-      // Still return success for security
-      return {
-        statusText: "Success",
-        message: securityMessage
-      };
-    }
+        if (!user) {
+          // For security, don't reveal that the email doesn't exist
+          return {
+            success: true,
+            message: 'If an account with that email exists, reset instructions have been sent'
+          };
+        }
 
-    // Generate reset token and send email
-    const resetToken = await PasswordResetService.generateResetToken(user.id);
-    
-    // Send reset email (fire and forget for security)
-    PasswordResetService.sendResetEmail(user.email, resetToken)
-      .catch((error: Error) => {  // Fixed: Added type annotation
-        console.error('Failed to send password reset email:', error);
-        // Log but don't expose to user
-      });
-
-    return {
-      statusText: "Success",
-      message: securityMessage
-    };
-    
-  } catch (error: any) {  // Fixed: Added type annotation
-    console.error('Error in requestPasswordReset resolver:', error);
-    return {
-      statusText: 'Failed',
-      message: 'An error occurred. Please try again later.'
-    };
-  }
-},
+        const result = await passwordResetService.requestPasswordReset(email);
+        return result;
+      } catch (error) {
+        console.error('Error in requestPasswordReset resolver:', error);
+        throw new Error(
+          error instanceof Error ? error.message : 'Failed to request password reset'
+        );
+      }
+    },
 
     resetPassword: async (_: any, { input }: { input: ResetPasswordInput }) => {
       try {
@@ -1329,7 +1311,9 @@ requestPasswordReset: async (_: any, { input }: { input:any }) => {
           }
         }
         
-        return result;
+        return {
+          statusText:result.success
+        };
       } catch (error) {
         console.error('Error in resetPassword resolver:', error);
         throw new Error(
