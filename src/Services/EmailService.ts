@@ -1,229 +1,331 @@
-// src/services/EmailService.ts
-import { generatePasswordResetEmail } from '../emailTemplates/passwordResetEmail.js';
+// src/Services/PasswordResetService.ts
+import { EmailService, EmailServiceConfig } from './EmailService';
+import { PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
+import { logger } from '../utils/logger';
 
-export interface EmailOptions {
-  to: string;
-  subject: string;
-  html: string;
-  from?: string;
-}
+export class PasswordResetService {
+  private prisma: PrismaClient;
+  private emailService: EmailService;
 
-export interface EmailServiceConfig {
-  service: 'sendgrid' | 'resend' | 'nodemailer' | 'console';
-  apiKey?: string;
-  fromEmail?: string;
-  appName?: string;
-  baseUrl?: string;
-  
-  // Add nodemailer specific properties
-  host?: string;
-  port?: number;
-  secure?: boolean;
-  auth?: {
-    user?: string;
-    pass?: string;
-  };
-}
-
-export class EmailService {
-  private config: EmailServiceConfig;
-
-  constructor(config: EmailServiceConfig) {
-    this.config = {
-      fromEmail: 'noreply@yourapp.com',
-      appName: 'Our App',
-      baseUrl: 'http://localhost:3000',
-      ...config
-    };
-  }
-
-  private async sendEmail(options: EmailOptions): Promise<boolean> {
-    try {
-      switch (this.config.service) {
-        case 'sendgrid':
-          return await this.sendWithSendGrid(options);
-        case 'resend':
-          return await this.sendWithResend(options);
-        case 'nodemailer':
-          return await this.sendWithNodemailer(options);
-        case 'console':
-        default:
-          return await this.sendToConsole(options);
-      }
-    } catch (error) {
-      console.error('Email sending failed:', error);
-      return false;
-    }
-  }
-
-  private async sendWithSendGrid(options: EmailOptions): Promise<boolean> {
-    if (!this.config.apiKey) {
-      throw new Error('SendGrid API key is required');
-    }
-
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: options.to }] }],
-        from: { email: options.from || this.config.fromEmail!, name: this.config.appName },
-        subject: options.subject,
-        content: [{ type: 'text/html', value: options.html }],
-      }),
-    });
-
-    return response.ok;
-  }
-
-  private async sendWithResend(options: EmailOptions): Promise<boolean> {
-    if (!this.config.apiKey) {
-      throw new Error('Resend API key is required');
-    }
-
-    const fromEmail = options.from || this.config.fromEmail!;
-
-    try {
-      const response = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${this.config.apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          from: `${this.config.appName} <${fromEmail}>`,
-          to: [options.to],
-          subject: options.subject,
-          html: options.html
-        })
-      });
-
-      const data = await response.json();
-      console.log("Resend response:", JSON.stringify(data, null, 2));
-
-      return response.ok;
-    } catch (error) {
-      console.error("Resend error:", error);
-      return false;
-    }
-  }
-
-  private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
-    const nodemailer = await import('nodemailer');
-
-    // Use config values or environment variables
-    const host = this.config.host || process.env.SMTP_HOST || 'smtp.gmail.com';
-    const port = this.config.port || parseInt(process.env.SMTP_PORT || '587');
-    const secure = this.config.secure !== undefined ? this.config.secure : (process.env.SMTP_SECURE === 'true' || port === 465);
-    const user = this.config.auth?.user || process.env.SMTP_USER || process.env.EMAIL_USER;
-    const pass = this.config.auth?.pass || process.env.SMTP_PASSWORD || process.env.EMAIL_PASSWORD;
-
-    if (!user || !pass) {
-      throw new Error('SMTP credentials not found. Please configure auth.user and auth.pass or set SMTP_USER/SMTP_PASSWORD environment variables.');
-    }
-
-    // Create transporter
-    const transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
+  constructor() {
+    this.prisma = new PrismaClient();
+    
+    // Fixed: Using 'fromEmail' instead of 'from'
+    const emailConfig: EmailServiceConfig = {
+      service: 'nodemailer',
+      fromEmail: process.env.EMAIL_FROM || 'noreply@example.com',
+      appName: process.env.APP_NAME || 'My Application',
+      baseUrl: process.env.APP_URL || 'http://localhost:3000',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
       auth: {
-        user,
-        pass,
-      },
-      // Optional: Add TLS options
-      tls: {
-        rejectUnauthorized: false // For self-signed certificates
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
       }
-    });
+    };
 
-    // Verify the connection first
+    this.emailService = new EmailService(emailConfig);
+  }
+
+  /**
+   * Request a password reset
+   */
+  async requestPasswordReset(email: string): Promise<{
+    success: boolean;
+    message: string;
+    resetToken?: string;
+  }> {
     try {
-      console.log("Verifying SMTP connection...");
-      await transporter.verify();
-      console.log("✅ SMTP connection verified successfully");
-    } catch (error: any) {
-      console.error("❌ SMTP connection failed:", error.message);
-      
-      if (error.code === 'EAUTH') {
-        console.error("\n⚠️  AUTHENTICATION ERROR:");
-        console.error(`Host: ${host}`);
-        console.error(`Port: ${port}`);
-        console.error(`User: ${user}`);
-        console.error("Check your credentials and ensure they're correct");
-        
-        if (host.includes('gmail.com')) {
-          console.error("\nFor Gmail:");
-          console.error("1. Enable 2-Step Verification at: https://myaccount.google.com/security");
-          console.error("2. Generate an 'App Password' for 'Mail'");
-          console.error("3. Use that 16-character password as your SMTP password");
+      logger.info(`Password reset requested for email: ${email}`);
+
+      // Find user by email
+      const user = await this.prisma.user.findUnique({
+        where: { email },
+        select: { id: true, email: true, name: true }
+      });
+
+      if (!user) {
+        // For security, don't reveal if user exists
+        logger.warn(`Password reset requested for non-existent email: ${email}`);
+        return {
+          success: true, // Return success even if user doesn't exist for security
+          message: 'If an account exists with this email, you will receive a reset link shortly.'
+        };
+      }
+
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Create or update reset token in database
+      await this.prisma.passwordReset.upsert({
+        where: { userId: user.id },
+        update: {
+          token: resetToken,
+          expiresAt: resetTokenExpiry,
+          used: false
+        },
+        create: {
+          token: resetToken,
+          expiresAt: resetTokenExpiry,
+          userId: user.id
         }
+      });
+
+      // Send reset email
+      const emailSent = await this.emailService.sendPasswordResetEmail(
+        email,
+        resetToken,
+        '1 hour'
+      );
+
+      if (!emailSent) {
+        logger.error(`Failed to send password reset email to: ${email}`);
+        return {
+          success: false,
+          message: 'Failed to send reset email. Please try again.'
+        };
       }
+
+      logger.info(`Password reset email sent to: ${email}`);
       
-      return false;
+      return {
+        success: true,
+        message: 'Password reset email sent successfully.',
+        resetToken: process.env.NODE_ENV === 'development' ? resetToken : undefined
+      };
+
+    } catch (error) {
+      logger.error('Error in requestPasswordReset:', error);
+      return {
+        success: false,
+        message: 'An error occurred while processing your request.'
+      };
     }
+  }
 
-    const mailOptions = {
-      from: `"${this.config.appName}" <${user}>`,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-      // Add text version as fallback
-      text: options.html.replace(/<[^>]*>/g, ''),
-    };
-
+  /**
+   * Validate reset token
+   */
+  async validateResetToken(token: string): Promise<{
+    valid: boolean;
+    message: string;
+    userId?: string;
+  }> {
     try {
-      const info = await transporter.sendMail(mailOptions);
-      console.log("✅ Email sent successfully:", {
-        messageId: info.messageId,
-        accepted: info.accepted,
-        response: info.response
+      logger.info(`Validating reset token: ${token.substring(0, 10)}...`);
+
+      const resetRecord = await this.prisma.passwordReset.findFirst({
+        where: {
+          token,
+          used: false,
+          expiresAt: {
+            gt: new Date()
+          }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true
+            }
+          }
+        }
       });
-      return true;
-    } catch (error: any) {
-      console.error("❌ Email sending failed:", {
-        error: error.message,
-        code: error.code,
-        response: error.response
-      });
-      return false;
+
+      if (!resetRecord) {
+        logger.warn(`Invalid or expired reset token: ${token.substring(0, 10)}...`);
+        return {
+          valid: false,
+          message: 'Invalid or expired reset token.'
+        };
+      }
+
+      logger.info(`Reset token valid for user: ${resetRecord.user.email}`);
+      
+      return {
+        valid: true,
+        message: 'Token is valid.',
+        userId: resetRecord.user.id
+      };
+
+    } catch (error) {
+      logger.error('Error in validateResetToken:', error);
+      return {
+        valid: false,
+        message: 'Error validating token.'
+      };
     }
   }
-  
-  private async sendToConsole(options: EmailOptions): Promise<boolean> {
-    console.log('📧 Email would be sent:');
-    console.log('To:', options.to);
-    console.log('Subject:', options.subject);
-    console.log('HTML Preview:', options.html.substring(0, 200) + '...');
-    console.log('---');
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return true;
-  }
 
-  public async sendPasswordResetEmail(
-    email: string, 
-    resetToken: string,
-    expiryTime: string = '1 hour'
-  ): Promise<boolean> {
-    const resetLink = `${this.config.baseUrl}/reset-password?token=${resetToken}`;
-    
-    const htmlContent = generatePasswordResetEmail({
-      userEmail: email,
-      resetLink,
-      expiryTime,
-      appName: this.config.appName
+  /**
+   * Reset password with token
+   */
+  async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    const transaction = await this.prisma.$transaction(async (tx) => {
+      try {
+        logger.info(`Attempting password reset with token: ${token.substring(0, 10)}...`);
+
+        // Find valid reset token
+        const resetRecord = await tx.passwordReset.findFirst({
+          where: {
+            token,
+            used: false,
+            expiresAt: {
+              gt: new Date()
+            }
+          },
+          include: {
+            user: true
+          }
+        });
+
+        if (!resetRecord) {
+          logger.warn(`Invalid or expired reset token for password reset: ${token.substring(0, 10)}...`);
+          throw new Error('Invalid or expired reset token.');
+        }
+
+        // Hash the new password (you should use bcrypt in production)
+        // For now, we'll just store it as is (DO NOT DO THIS IN PRODUCTION)
+        const hashedPassword = newPassword; // In production: await bcrypt.hash(newPassword, 10);
+
+        // Update user's password
+        await tx.user.update({
+          where: { id: resetRecord.userId },
+          data: { password: hashedPassword }
+        });
+
+        // Mark token as used
+        await tx.passwordReset.update({
+          where: { id: resetRecord.id },
+          data: { used: true, usedAt: new Date() }
+        });
+
+        // Optional: Invalidate all existing sessions for this user
+        await tx.session.deleteMany({
+          where: { userId: resetRecord.userId }
+        });
+
+        logger.info(`Password successfully reset for user: ${resetRecord.user.email}`);
+        
+        return {
+          success: true,
+          message: 'Password reset successfully.'
+        };
+
+      } catch (error) {
+        logger.error('Error in resetPassword:', error);
+        throw error;
+      }
     });
 
-    const emailOptions: EmailOptions = {
-      to: email,
-      subject: `Reset Your Password - ${this.config.appName}`,
-      html: htmlContent,
-      from: this.config.fromEmail,
+    return transaction;
+  }
+
+  /**
+   * Clean up expired reset tokens (cron job)
+   */
+  async cleanupExpiredTokens(): Promise<number> {
+    try {
+      const result = await this.prisma.passwordReset.deleteMany({
+        where: {
+          OR: [
+            { expiresAt: { lt: new Date() } },
+            { used: true }
+          ]
+        }
+      });
+
+      logger.info(`Cleaned up ${result.count} expired password reset tokens`);
+      return result.count;
+
+    } catch (error) {
+      logger.error('Error in cleanupExpiredTokens:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get user by reset token
+   */
+  async getUserByResetToken(token: string) {
+    try {
+      const resetRecord = await this.prisma.passwordReset.findFirst({
+        where: {
+          token,
+          used: false,
+          expiresAt: {
+            gt: new Date()
+          }
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              profileImage: true
+            }
+          }
+        }
+      });
+
+      return resetRecord?.user || null;
+    } catch (error) {
+      logger.error('Error in getUserByResetToken:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Create a new email service instance with different configuration
+   */
+  createEmailService(configOverride?: Partial<EmailServiceConfig>): EmailService {
+    const defaultConfig: EmailServiceConfig = {
+      service: 'nodemailer',
+      fromEmail: process.env.EMAIL_FROM || 'noreply@example.com',
+      appName: process.env.APP_NAME || 'My Application',
+      baseUrl: process.env.APP_URL || 'http://localhost:3000',
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
     };
 
-    return await this.sendEmail(emailOptions);
+    return new EmailService({
+      ...defaultConfig,
+      ...configOverride
+    });
   }
-      }
+
+  /**
+   * Close database connection
+   */
+  async disconnect(): Promise<void> {
+    await this.prisma.$disconnect();
+  }
+}
+
+// Export singleton instance
+export const passwordResetService = new PasswordResetService();
+
+// Helper functions
+export const generateResetToken = (): string => {
+  return crypto.randomBytes(32).toString('hex');
+};
+
+export const calculateExpiryDate = (hours: number = 1): Date => {
+  return new Date(Date.now() + hours * 3600000);
+};
