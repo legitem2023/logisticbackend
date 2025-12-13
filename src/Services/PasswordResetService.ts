@@ -1,5 +1,5 @@
 // src/services/PasswordResetService.ts
-import { EmailService, EmailServiceConfig } from './EmailService';
+import { EmailService, EmailServiceConfig } from './EmailService.js';
 
 export interface ResetTokenData {
   email: string;
