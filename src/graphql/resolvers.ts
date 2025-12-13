@@ -1256,7 +1256,8 @@ locationTracking: async (_: any, args: any) => {
       };
     },
 
-requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
+
+requestPasswordReset: async (_: any, { input }: { input:any }) => {
   try {
     const { email } = input;
 
@@ -1287,7 +1288,7 @@ requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInp
     
     // Send reset email (fire and forget for security)
     PasswordResetService.sendResetEmail(user.email, resetToken)
-      .catch(error => {
+      .catch((error: Error) => {  // Fixed: Added type annotation
         console.error('Failed to send password reset email:', error);
         // Log but don't expose to user
       });
@@ -1297,7 +1298,7 @@ requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInp
       message: securityMessage
     };
     
-  } catch (error) {
+  } catch (error: any) {  // Fixed: Added type annotation
     console.error('Error in requestPasswordReset resolver:', error);
     return {
       statusText: 'Failed',
