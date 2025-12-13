@@ -1,5 +1,5 @@
 // src/Services/PasswordResetService.ts
-import { EmailService, EmailServiceConfig } from './EmailService';
+import { EmailService, EmailServiceConfig } from './EmailService.js';
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import { logger } from '../utils/logger';
