@@ -1256,13 +1256,14 @@ locationTracking: async (_: any, args: any) => {
       };
     },
 
-    requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
+requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
   try {
     const { email } = input;
 
     if (!email) {
       return {
-        statusText: 'Failed'
+        statusText: 'Failed',
+        message: 'Email is required'
       };
     }
 
@@ -1270,23 +1271,34 @@ locationTracking: async (_: any, args: any) => {
       where: { email }
     });
 
-    // For security, always return the same message regardless of whether user exists
-    const successMessage = 'Success';
+    // For security, always return the same message
+    const securityMessage = 'If an account with that email exists, a password reset link has been sent.';
     
     if (!user) {
       return {
-        statusText: "Email address not registered!"
+        statusText: "Success",
       };
-    }else {
-    // Return the result from the service or success message
-       return {
-         statusText: "Success"
-       };  
     }
+
+    // Generate reset token
+    const resetToken = await PasswordResetService.generateResetToken(user.id);
+    
+    // Send reset email and wait for it
+    const emailSent = await PasswordResetService.sendResetEmail(user.email, resetToken);
+    
+    if (!emailSent) {
+      console.error('Failed to send password reset email to:', user.email);
+      // Still return success for security
+    }
+
+    return {
+      statusText: "Success"
+    };
+    
   } catch (error) {
     console.error('Error in requestPasswordReset resolver:', error);
     return {
-      statusText: 'Failed'
+      statusText: 'Failed',
     };
   }
 },
