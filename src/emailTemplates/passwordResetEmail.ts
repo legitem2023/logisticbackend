@@ -307,12 +307,6 @@ export const generatePasswordResetEmail = ({
                          class="logo-image"
                          style="height: 100%; width: 100%;">
                 </div>
-                
-                <!-- Logo Text -->
-                <div class="logo-text-container">
-                    <div class="logo-title">Pramatiso</div>
-                    <div class="logo-subtitle">Express</div>
-                </div>
             </div>
         </div>
         
