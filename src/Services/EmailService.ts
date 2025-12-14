@@ -85,7 +85,7 @@ private async sendWithResend(options: EmailOptions): Promise<boolean> {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        from: `Adiviso App <${fromEmail}>`,
+        from: `Pramatiso Express <${fromEmail}>`,
         to: [options.to],
         subject: options.subject,
         html: options.html
