@@ -35,7 +35,7 @@ model User {
   sentDeliveries  Delivery[] @relation("SenderDeliveries")
 
   proofOfPickups  ProofOfPickup[] @relation("UserPickupProofs")
-  passwordResets PasswordReset[] @relation("email", fields: [email], references: [email])
+  passwordResets PasswordReset[]
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
