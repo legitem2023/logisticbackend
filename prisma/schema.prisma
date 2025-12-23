@@ -35,13 +35,37 @@ model User {
   sentDeliveries  Delivery[] @relation("SenderDeliveries")
 
   proofOfPickups  ProofOfPickup[] @relation("UserPickupProofs")
-  
+  passwordResets PasswordReset[] @relation("email", fields: [email], references: [email])
   statusLogs      DeliveryStatusLog[]
   routeHistory    RouteHistory[]
   notifications   Notification[]
   rating          Float?  @default(4.0)
   blacklistedTokens  BlacklistedToken[]
 }
+
+
+model PasswordReset {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userEmail String
+  user      User     @relation("email", fields: [userEmail], references: [email], onDelete: Cascade)
+  
+  token     String   @unique // Hashed token
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  // Indexes for MongoDB
+  @@index([userEmail], name: "userEmail_index")
+  @@index([token], name: "token_index")
+  @@index([userEmail, used], name: "user_active_reset_index")
+  @@index([token, used, expiresAt], name: "validation_index")
+  
+  // TTL index for automatic expiration
+  @@index([expiresAt], type: "ttl", expireAfterSeconds: 0)
+  
+  @@map("password_resets")
+}
+
 
 
 model BlacklistedToken {
