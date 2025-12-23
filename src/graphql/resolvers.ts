@@ -1288,39 +1288,60 @@ locationTracking: async (_: any, args: any) => {
         );
       }
     },
-
     resetPassword: async (_: any, { input }: { input: ResetPasswordInput }) => {
-      try {
-        const { token, newPassword } = input;
+  try {
+    const { token, newPassword } = input;
 
-        if (!token || !newPassword) {
-          throw new Error('Token and new password are required');
-        }
+    if (!token || !newPassword) {
+      throw new Error('Token and new password are required');
+    }
 
-        const result = await passwordResetService.resetPassword(token, newPassword);
-        
-        if (result.success) {
-          // Update the user's password in the database
-          const tokenValidation = passwordResetService.validateResetToken(token);
-          if (tokenValidation.valid && tokenValidation.email) {
-            const passwordHash = await encryptPassword(newPassword, 10);
-            await prisma.user.update({
-              where: { email: tokenValidation.email },
-              data: { passwordHash }
-            });
-          }
-        }
-        
-        return {
-          statusText:result.success
-        };
-      } catch (error) {
-        console.error('Error in resetPassword resolver:', error);
-        throw new Error(
-          error instanceof Error ? error.message : 'Failed to reset password'
-        );
-      }
-    },
+    // First validate the token to ensure it's valid and get the email
+    const tokenValidation = await passwordResetService.validateResetToken(token);
+    
+    if (!tokenValidation.valid) {
+      return {
+        statusText: tokenValidation.message || 'Invalid or expired token'
+      };
+    }
+
+    if (!tokenValidation.email) {
+      return {
+        statusText: 'Unable to identify user from token'
+      };
+    }
+
+    // Process the password reset
+    const result = await passwordResetService.resetPassword(token, newPassword);
+    
+    if (!result.success) {
+      return {
+        success: false,
+        statusText: result.message || 'Failed to reset password'
+      };
+    }
+
+    // If everything is valid, update the password
+    const passwordHash = await encryptPassword(newPassword, 10);
+    await prisma.user.update({
+      where: { email: tokenValidation.email },
+      data: { passwordHash }
+    });
+
+    // Invalidate/delete the used token to prevent reuse
+    await passwordResetService.invalidateResetToken(token);
+
+    return {
+      statusText: result.message || 'Password has been successfully reset'
+    };
+    
+  } catch (error) {
+    console.error('Error in resetPassword resolver:', error);
+    throw new Error(
+      error instanceof Error ? error.message : 'Failed to reset password'
+    );
+  }
+},
 editpassword: async (_: any, args: any) => {
   const email = args.email;
   const newpassword = args.password;
