@@ -1296,44 +1296,30 @@ locationTracking: async (_: any, args: any) => {
       throw new Error('Token and new password are required');
     }
 
-    // First validate the token to ensure it's valid and get the email
-    const tokenValidation = await passwordResetService.validateResetToken(token);
-    
-    if (!tokenValidation.valid) {
-      return {
-        statusText: tokenValidation.message || 'Invalid or expired token'
-      };
-    }
-
-    if (!tokenValidation.email) {
-      return {
-        statusText: 'Unable to identify user from token'
-      };
-    }
-
-    // Process the password reset
     const result = await passwordResetService.resetPassword(token, newPassword);
     
-    if (!result.success) {
+    if (result.success) {
+      // Update the user's password in the database
+      const tokenValidation = await passwordResetService.validateResetToken(token);
+      if (tokenValidation.valid && tokenValidation.email) {
+        const passwordHash = await encryptPassword(newPassword, 10);
+        await prisma.user.update({
+          where: { email: tokenValidation.email },
+          data: { passwordHash }
+        });
+        return {
+          statusText: result.message // Changed from result.success to result.message
+        };
+      } else {
+        return {
+          statusText: tokenValidation.message
+        };
+      }
+    } else {
       return {
-        success: false,
-        statusText: result.message || 'Failed to reset password'
+        statusText: result.message
       };
     }
-
-    // If everything is valid, update the password
-    const passwordHash = await encryptPassword(newPassword, 10);
-    await prisma.user.update({
-      where: { email: tokenValidation.email },
-      data: { passwordHash }
-    });
-
-    // Invalidate/delete the used token to prevent reuse
-    await passwordResetService.invalidateResetToken(token);
-
-    return {
-      statusText: result.message || 'Password has been successfully reset'
-    };
     
   } catch (error) {
     console.error('Error in resetPassword resolver:', error);
