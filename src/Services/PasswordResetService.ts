@@ -608,7 +608,7 @@ export class PasswordResetService {
         where: {
           token: hashedToken,
           used: false,
-          expiresAt: { gt: new Date() }
+          /*expiresAt: { gt: new Date() }*/
         },
         include: {
           user: true
