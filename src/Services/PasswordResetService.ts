@@ -616,11 +616,11 @@ export class PasswordResetService {
       });
       
       if (!tokenData) {
-        return { 
-          valid: false, 
-          message: 'Invalid or expired reset token' 
-        };
-      }
+    return { 
+        valid: false, 
+        message: `Invalid or expired reset token. Token: ${token}, Hashed: ${hashedToken}, Data: ${tokenData}`
+    };
+}
 
       return { 
         valid: true, 
