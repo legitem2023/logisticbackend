@@ -4,7 +4,7 @@ export interface PasswordResetEmailProps {
   resetLink: string;
   expiryTime?: string;
   appName?: string;
-  logoUrl?: string; // Added logo URL parameter
+  logoUrl?: string;
 }
 
 export const generatePasswordResetEmail = ({
@@ -12,7 +12,7 @@ export const generatePasswordResetEmail = ({
   resetLink,
   expiryTime = '1 hour',
   appName = 'Pramatiso Express',
-  logoUrl = 'https://adiviso.com/Motogo.png' // Default logo URL
+  logoUrl = 'https://adiviso.com/Motogo.png'
 }: PasswordResetEmailProps): string => {
   return `
 <!DOCTYPE html>
@@ -20,7 +20,7 @@ export const generatePasswordResetEmail = ({
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Your Password - Pramatiso Express</title>
+    <title>Reset Your Password - ${appName}</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -57,6 +57,7 @@ export const generatePasswordResetEmail = ({
            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 0 15px rgba(255, 215, 0, 0.15);
         }
+        
         .logo-container {
             display: flex;
             align-items: center;
@@ -140,10 +141,6 @@ export const generatePasswordResetEmail = ({
             box-shadow: 0 6px 20px rgba(5, 95, 70, 0.4);
         }
         
-        .reset-button:active {
-            transform: translateY(0);
-        }
-        
         .info-box {
             background: #ecfdf5;
             border: 1px solid #a7f3d0;
@@ -166,53 +163,71 @@ export const generatePasswordResetEmail = ({
             margin-bottom: 15px;
         }
         
-        .link-container {
+        .link-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .link-display {
             background: white;
             border: 1px solid #a7f3d0;
             border-radius: 6px;
             padding: 12px;
-            margin: 12px 0;
             word-break: break-all;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 13px;
             color: #065f46;
-            position: relative;
-            padding-right: 110px;
+            line-height: 1.5;
+            max-height: 100px;
+            overflow-y: auto;
         }
         
-        .copy-button {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
+        .copy-link-button {
+            align-self: flex-start;
             background: linear-gradient(135deg, #065f46 0%, #047857 100%);
             color: white;
             border: none;
-            border-radius: 4px;
-            padding: 6px 12px;
-            font-size: 12px;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 14px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
             font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(5, 95, 70, 0.2);
         }
         
-        .copy-button:hover {
+        .copy-link-button:hover {
             background: linear-gradient(135deg, #054732 0%, #036449 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(5, 95, 70, 0.3);
         }
         
-        .copy-button.copied {
+        .copy-link-button:active {
+            transform: translateY(0);
+        }
+        
+        .copy-link-button.copied {
             background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            pointer-events: none;
+        }
+        
+        .copy-icon {
+            font-size: 16px;
         }
         
         .status-message {
-            text-align: center;
-            margin: 10px 0;
+            margin-top: 8px;
             font-size: 13px;
             font-weight: 500;
             min-height: 20px;
             opacity: 0;
             transition: opacity 0.3s ease;
+            color: #059669;
         }
         
         .status-message.show {
@@ -268,22 +283,18 @@ export const generatePasswordResetEmail = ({
                 font-size: 24px;
             }
             
-            .link-container {
-                padding-right: 100px;
+            .link-display {
                 font-size: 12px;
+                max-height: 80px;
             }
             
-            .copy-button {
-                padding: 5px 10px;
-                font-size: 11px;
+            .copy-link-button {
+                padding: 8px 16px;
+                font-size: 13px;
             }
         }
         
         @media (max-width: 400px) {
-            .link-container {
-                padding-right: 90px;
-            }
-            
             .logo-image-container {
                 height: 45px;
                 width: 45px;
@@ -291,6 +302,10 @@ export const generatePasswordResetEmail = ({
             
             .logo-title {
                 font-size: 22px;
+            }
+            
+            .link-section {
+                gap: 8px;
             }
         }
     </style>
@@ -303,7 +318,7 @@ export const generatePasswordResetEmail = ({
                 <!-- Logo Image - Using the same image as your Navigation component -->
                 <div class="logo-image-container">
                     <img src="${logoUrl}" 
-                         alt="Pramatiso Logo" 
+                         alt="${appName} Logo" 
                          class="logo-image"
                          style="height: 100%; width: 100%;">
                 </div>
@@ -336,14 +351,16 @@ export const generatePasswordResetEmail = ({
                     Copy and paste this link into your browser:
                 </p>
                 
-                <div class="link-container">
-                    ${resetLink}
-                    <button class="copy-button" onclick="copyResetLink()">
+                <div class="link-section">
+                    <div class="link-display">
+                        ${resetLink}
+                    </div>
+                    <button class="copy-link-button" onclick="copyResetLink()">
+                        <span class="copy-icon">📋</span>
                         Copy Link
                     </button>
+                    <div class="status-message" id="copyStatus"></div>
                 </div>
-                
-                <div class="status-message" id="copyStatus"></div>
             </div>
             
             <p class="message">
@@ -360,7 +377,7 @@ export const generatePasswordResetEmail = ({
     <script>
         function copyResetLink() {
             const resetLink = "${resetLink}";
-            const copyButton = event.target;
+            const copyButton = event.target.closest('.copy-link-button');
             const statusMessage = document.getElementById('copyStatus');
             
             // Create a temporary textarea element
@@ -380,25 +397,17 @@ export const generatePasswordResetEmail = ({
                 
                 if (successful) {
                     // Show success state
-                    copyButton.textContent = 'Copied!';
+                    copyButton.innerHTML = '<span class="copy-icon">✓</span> Copied!';
                     copyButton.classList.add('copied');
                     
-                    statusMessage.textContent = '✓ Link copied to clipboard!';
-                    statusMessage.style.color = '#059669';
+                    statusMessage.textContent = 'Link copied to clipboard!';
                     statusMessage.classList.add('show');
                     
-                    // Reset button after 2 seconds
+                    // Reset button after 3 seconds
                     setTimeout(() => {
-                        copyButton.textContent = 'Copy Link';
+                        copyButton.innerHTML = '<span class="copy-icon">📋</span> Copy Link';
                         copyButton.classList.remove('copied');
-                    }, 2000);
-                    
-                    // Hide status message after 3 seconds
-                    setTimeout(() => {
                         statusMessage.classList.remove('show');
-                        setTimeout(() => {
-                            statusMessage.textContent = '';
-                        }, 300);
                     }, 3000);
                 } else {
                     throw new Error('Copy command failed');
@@ -407,23 +416,16 @@ export const generatePasswordResetEmail = ({
                 // Fallback for browsers that don't support execCommand
                 try {
                     navigator.clipboard.writeText(resetLink).then(() => {
-                        copyButton.textContent = 'Copied!';
+                        copyButton.innerHTML = '<span class="copy-icon">✓</span> Copied!';
                         copyButton.classList.add('copied');
                         
-                        statusMessage.textContent = '✓ Link copied to clipboard!';
-                        statusMessage.style.color = '#059669';
+                        statusMessage.textContent = 'Link copied to clipboard!';
                         statusMessage.classList.add('show');
                         
                         setTimeout(() => {
-                            copyButton.textContent = 'Copy Link';
+                            copyButton.innerHTML = '<span class="copy-icon">📋</span> Copy Link';
                             copyButton.classList.remove('copied');
-                        }, 2000);
-                        
-                        setTimeout(() => {
                             statusMessage.classList.remove('show');
-                            setTimeout(() => {
-                                statusMessage.textContent = '';
-                            }, 300);
                         }, 3000);
                     }).catch(fallbackCopy);
                 } catch (err) {
@@ -435,28 +437,23 @@ export const generatePasswordResetEmail = ({
             }
             
             function fallbackCopy() {
-                // Last resort fallback
-                copyButton.textContent = 'Click to select';
-                copyButton.classList.remove('copied');
-                
-                // Select the text in the container
-                const linkContainer = copyButton.parentElement;
+                // Last resort fallback - select the text in the link display
+                const linkDisplay = document.querySelector('.link-display');
                 const range = document.createRange();
-                range.selectNodeContents(linkContainer.firstChild);
+                range.selectNodeContents(linkDisplay);
                 const selection = window.getSelection();
                 selection.removeAllRanges();
                 selection.addRange(range);
                 
-                statusMessage.textContent = 'Text selected. Press Ctrl+C to copy.';
+                statusMessage.textContent = 'Text selected. Press Ctrl+C (Cmd+C on Mac) to copy.';
                 statusMessage.style.color = '#92400e';
                 statusMessage.classList.add('show');
                 
+                copyButton.textContent = 'Text Selected';
+                
                 setTimeout(() => {
-                    copyButton.textContent = 'Copy Link';
+                    copyButton.innerHTML = '<span class="copy-icon">📋</span> Copy Link';
                     statusMessage.classList.remove('show');
-                    setTimeout(() => {
-                        statusMessage.textContent = '';
-                    }, 300);
                 }, 3000);
             }
         }
