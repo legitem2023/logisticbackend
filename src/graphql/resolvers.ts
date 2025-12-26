@@ -77,7 +77,9 @@ export const resolvers = {
     getAllPasswordReset: async (_:any,_args:any) => {
       try {
         return await prisma.passwordReset.findMany({
-          orderBy: { createdAt: 'desc' }
+          include: {
+            user: true
+          }
         });
       } catch (error) {
         console.error('Error fetching all password resets:', error);
