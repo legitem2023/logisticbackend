@@ -74,6 +74,16 @@ const LOCATION_TRACKING: any = "";
 const NOTIFICATION_RECEIVED:any = "";
 export const resolvers = {
   Query: {
+    getAllPasswordReset: async (_:any,_args:any) => {
+      try {
+        return await prisma.passwordReset.findMany({
+          orderBy: { createdAt: 'desc' }
+        });
+      } catch (error) {
+        console.error('Error fetching all password resets:', error);
+        throw new Error('Failed to fetch password reset records');
+      }
+    },
     getUsers: async (_: any, args: any) => {
     return await prisma.user.findMany({
       include: {
