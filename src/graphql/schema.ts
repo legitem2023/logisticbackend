@@ -244,10 +244,19 @@ type AuthStatus {
   user: User
 }
 
+type PasswordReset {
+  id: String
+  userId: String
+  userEmail: String
+  token: String
+  expiresAt: DateTime
+  used: Boolean
+  createdAt: DateTime
+}
 
 type Query {
   passwordResetStats: PasswordResetStats!
-
+  getAllPasswordReset: [PasswordReset]
   authStatus: AuthStatus!
   getUsers: [User]
   getUser(id: String): User
