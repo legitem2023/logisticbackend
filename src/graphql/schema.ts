@@ -252,6 +252,7 @@ type PasswordReset {
   expiresAt: String
   used: Boolean
   createdAt: String
+  user: User
 }
 
 type Query {
