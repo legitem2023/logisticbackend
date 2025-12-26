@@ -249,9 +249,9 @@ type PasswordReset {
   userId: String
   userEmail: String
   token: String
-  expiresAt: DateTime
+  expiresAt: String
   used: Boolean
-  createdAt: DateTime
+  createdAt: String
 }
 
 type Query {
