@@ -127,7 +127,7 @@ export class PasswordResetService {
         .digest('hex');
 
       // Find the token in database
-      const tokenData = await this.prisma.passwordReset.findMany({
+      const tokenData = await this.prisma.passwordReset.findUnique({
         where: {
           token: hashedToken,
           used: false,
