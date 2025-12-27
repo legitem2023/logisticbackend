@@ -127,11 +127,11 @@ export class PasswordResetService {
         .digest('hex');
 
       // Find the token in database
-      const tokenData = await this.prisma.passwordReset.findFirst({
+      const tokenData = await this.prisma.passwordReset.findMany({
         where: {
           token: hashedToken,
           used: false,
-          /*expiresAt: { gt: new Date() }*/
+          expiresAt: { gt: new Date() }
         },
         include: {
           user: true
