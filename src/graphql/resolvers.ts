@@ -74,7 +74,7 @@ const LOCATION_TRACKING: any = "";
 const NOTIFICATION_RECEIVED:any = "";
 export const resolvers = {
   Query: {
-    getAllPasswordReset: async (_:any,_args:any) => {
+    getAllPasswordResets: async (_:any,_args:any) => {
       try {
         return await prisma.passwordReset.findMany({
           include: {
