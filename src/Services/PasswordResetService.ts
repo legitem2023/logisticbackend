@@ -140,7 +140,7 @@ export class PasswordResetService {
     if (!tokenData) {
       return { 
         valid: false, 
-        message: 'Invalid reset token.'
+        message: `Invalid reset token: ${ hashedToken }`
       };
     }
     
