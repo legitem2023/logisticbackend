@@ -20,6 +20,7 @@ export interface PasswordValidationResult {
   valid: boolean;
   email?: string | null;
   message: string;
+  user?: any;
 }
 
 export class PasswordResetService {
@@ -160,16 +161,21 @@ export class PasswordResetService {
     
     return { 
       valid: true, 
-      message: 'Token is valid.',
-      user: tokenData.user
+      message: 'Token is valid.'
     };
     
-  } catch (error) {
-    return { 
-      valid: false, 
-      message: 'Error validating token: ' + error.message 
-    };
+  } catch (error: unknown) {
+  let errorMessage = 'Error validating token';
+  
+  if (error instanceof Error) {
+    errorMessage += ': ' + error.message;
   }
+  
+  return { 
+    valid: false, 
+    message: errorMessage 
+  };
+}
 }
 
   public async resetPassword(
