@@ -257,7 +257,7 @@ type PasswordReset {
 
 type Query {
   passwordResetStats: PasswordResetStats!
-  getAllPasswordReset: [PasswordReset]
+  getAllPasswordResets: [PasswordReset]
   authStatus: AuthStatus!
   getUsers: [User]
   getUser(id: String): User
