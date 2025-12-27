@@ -118,46 +118,59 @@ export class PasswordResetService {
     }
   }
 
+
   public async validateResetToken(token: string): Promise<PasswordValidationResult> {
-    try {
-      // Hash the incoming token for comparison
-      const hashedToken = crypto
-        .createHash('sha256')
-        .update(token)
-        .digest('hex');
+  try {
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
 
-      // Find the token in database
-      const tokenData = await this.prisma.passwordReset.findUnique({
-        where: {
-          token: hashedToken,
-          used: false,
-          expiresAt: { gt: new Date() }
-        },
-        include: {
-          user: true
-        }
-      });
-      
-      if (!tokenData) {
-    return { 
-        valid: false, 
-        message: `Invalid or expired reset token. Token: ${token}, Hashed: ${hashedToken}, Data: ${tokenData}`
-    };
-}
-
-      return { 
-        valid: true, 
-        email: tokenData.userEmail,
-        message: 'Token is valid' 
-      };
-    } catch (error) {
-      console.error('Token validation failed:', error);
+    // Get token data regardless of expiration
+    const tokenData = await this.prisma.passwordReset.findUnique({
+      where: {
+        token: hashedToken,
+      },
+      include: {
+        user: true
+      }
+    });
+    
+    if (!tokenData) {
       return { 
         valid: false, 
-        message: 'Error validating token' 
+        message: 'Invalid reset token.'
       };
     }
+    
+    if (tokenData.used) {
+      return { 
+        valid: false, 
+        message: 'This reset token has already been used.'
+      };
+    }
+    
+    const now = new Date();
+    if (tokenData.expiresAt <= now) {
+      return { 
+        valid: false, 
+        message: 'Reset token has expired.'
+      };
+    }
+    
+    return { 
+      valid: true, 
+      message: 'Token is valid.',
+      user: tokenData.user
+    };
+    
+  } catch (error) {
+    return { 
+      valid: false, 
+      message: 'Error validating token: ' + error.message 
+    };
   }
+}
 
   public async resetPassword(
     token: string, 
