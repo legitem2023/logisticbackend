@@ -15,14 +15,25 @@ import { EmailServiceConfig, EmailService } from '../Services/EmailService.js';
 const emailService = new EmailService({
   service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
   apiKey: process.env.EMAIL_APIKEY,
-  fromEmail: 'onboarding@adiviso.com',  appName: process.env.APP_NAME || 'Pramatiso Express',
-  appName: process.env.APP_NAME || 'Pramatiso Express',
+  fromEmail: 'onboarding@adiviso.com',
+  appName: process.env.APP_NAME || 'Pramatiso Express', // REMOVE DUPLICATE
   baseUrl: process.env.BASE_URL || 'https://adiviso.com',
   logoUrl: process.env.LOGO_URL || 'https://adiviso.com/Motogo.png',
   logisticsTeamEmail: process.env.LOGISTICS_TEAM_EMAIL,
   supportEmail: process.env.SUPPORT_EMAIL || 'support@yourapp.com',
   supportPhone: process.env.SUPPORT_PHONE || '+1 (800) 123-4567',
 });
+
+// For the emailConfig object (if you still need it separately):
+const emailConfig: EmailServiceConfig = {
+  service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
+  apiKey: process.env.EMAIL_APIKEY,
+  fromEmail: 'onboarding@adiviso.com',
+  appName: process.env.APP_NAME || 'Pramatiso Express',
+  baseUrl: process.env.BASE_URL || 'https://adiviso.com'
+  // Note: You can add the other properties here if needed
+  // logoUrl, logisticsTeamEmail, supportEmail, supportPhone
+};
 
 
 
@@ -40,14 +51,7 @@ interface ValidateResetTokenInput {
   token: string;
 }
 
-// Initialize the password reset service
-const emailConfig: EmailServiceConfig = {
-  service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
-  apiKey: process.env.EMAIL_APIKEY,
-  fromEmail: 'onboarding@adiviso.com',//'robertsancomarquez1988@gmail.com',// process.env.FROM_EMAIL || 'noreply@adiviso.com',
-  appName: process.env.APP_NAME || 'Pramatiso Express',
-  baseUrl: process.env.BASE_URL || 'https://adiviso.com'
-};
+
 
 const passwordResetService = new PasswordResetService(emailConfig);
 
