@@ -140,14 +140,16 @@ export class PasswordResetService {
     if (!tokenData) {
       return { 
         valid: false, 
-        message: `Invalid reset token: ${ hashedToken }`
+        message: `Invalid reset token: ${ hashedToken }`,
+        email:''
       };
     }
     
     if (tokenData.used) {
       return { 
         valid: false, 
-        message: 'This reset token has already been used.'
+        message: 'This reset token has already been used.',
+        email:''
       };
     }
     
@@ -155,13 +157,15 @@ export class PasswordResetService {
     if (tokenData.expiresAt <= now) {
       return { 
         valid: false, 
-        message: 'Reset token has expired.'
+        message: 'Reset token has expired.',
+        email:''
       };
     }
     
     return { 
       valid: true, 
-      message: 'Token is valid.'
+      message: 'Token is valid.',
+      email:tokenData.userEmail
     };
     
   } catch (error: unknown) {
@@ -173,7 +177,8 @@ export class PasswordResetService {
   
   return { 
     valid: false, 
-    message: errorMessage 
+    message: errorMessage,
+    email:''
   };
 }
 }
