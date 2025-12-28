@@ -1312,7 +1312,7 @@ locationTracking: async (_: any, args: any) => {
     
     if (result.success) {
       // Update the user's password in the database
-      const tokenValidation = await passwordResetService.validateResetToken(token);
+      const tokenValidation:any = await passwordResetService.validateResetToken(token);
       if (tokenValidation.valid) {
         const passwordHash = await encryptPassword(newPassword, 10);
         await prisma.user.update({
