@@ -433,8 +433,38 @@ type PasswordResetResult {
   }
 
 
+type ContactFormData {
+  name: String!
+  email: String!
+  phone: String
+  company: String
+  service: String!
+  message: String!
+}
+
+type ContactFormResponse {
+  success: Boolean!
+  message: String!
+  referenceNumber: String
+  emailSent: Boolean
+  timestamp: String
+}
+
+input ContactFormInput {
+  name: String!
+  email: String!
+  phone: String
+  company: String
+  service: String!
+  message: String!
+}
+
+
+
+
 
 type Mutation {
+  submitLogisticsContactForm(formData: ContactFormInput!): ContactFormResponse!
   editpassword(email:String,password:String):Result
   requestPasswordReset(input: RequestPasswordResetInput!):Result
   resetPassword(input: ResetPasswordInput!): Result
