@@ -183,80 +183,83 @@ export class PasswordResetService {
 }
 
   public async resetPassword(
-    token: string, 
-    newPassword: string
-  ): Promise<PasswordResetResult> {
-    try {
-      const validation = await this.validateResetToken(token);
-      
-      if (!validation.valid) {
-        return { success: false, message: validation.message };
-      }
-
-      // FIXED: Check if email exists and cast to string
-      if (!validation.email) {
-        return { success: false, message: 'Invalid token data' };
-      }
-
-      // Validate password strength
-      const passwordValidation = this.validatePasswordStrength(newPassword);
-      if (!passwordValidation.valid) {
-        return { success: false, message: passwordValidation.message };
-      }
-
-      // Hash the token to find it
-      const hashedToken = crypto
-        .createHash('sha256')
-        .update(token)
-        .digest('hex');
-
-      // Find and mark token as used
-      const tokenData = await this.prisma.passwordReset.findFirst({
-        where: {
-          token: hashedToken,
-          userEmail: validation.email,
-          used: false
-        }
-      });
-
-      if (!tokenData) {
-        return { success: false, message: 'Token not found or already used' };
-      }
-
-      // Mark token as used
-      await this.prisma.passwordReset.update({
-        where: { id: tokenData.id },
-        data: { used: true }
-      });
-
-      // Hash the new password
-      const hashedPassword = crypto
-        .createHash('sha256')
-        .update(newPassword + (process.env.PASSWORD_SALT || ''))
-        .digest('hex');
-
-      // Update user password - FIXED: Use passwordHash field and cast email to string
-      await this.prisma.user.update({
-        where: { 
-          email: validation.email as string 
-        },
-        data: { 
-          passwordHash: hashedPassword // Changed from 'password' to 'passwordHash'
-        }
-      });
-
-      return { 
-        success: true, 
-        message: 'Password has been successfully reset' 
-      };
-    } catch (error) {
-      console.error('Password reset failed:', error);
-      return { 
-        success: false, 
-        message: 'An error occurred while resetting your password' 
-      };
+  token: string, 
+  newPassword: string
+): Promise<PasswordResetResult> {
+  try {
+    const validation = await this.validateResetToken(token);
+    
+    if (!validation.valid) {
+      return { success: false, message: validation.message };
     }
+
+    // Check if email exists and cast to string
+    if (!validation.email) {
+      return { success: false, message: 'Invalid token data' };
+    }
+
+    const email = validation.email as string;
+
+    // Validate password strength
+    const passwordValidation = this.validatePasswordStrength(newPassword);
+    if (!passwordValidation.valid) {
+      return { success: false, message: passwordValidation.message };
+    }
+
+    // Hash the token to find it
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find the token first
+    const tokenData = await this.prisma.passwordReset.findFirst({
+      where: {
+        token: hashedToken,
+        userEmail: email,
+        used: false
+      }
+    });
+
+    if (!tokenData) {
+      return { success: false, message: 'Token not found or already used' };
+    }
+
+    // FIXED: Update user password FIRST
+    // Hash the new password
+    const hashedPassword = crypto
+      .createHash('sha256')
+      .update(newPassword + (process.env.PASSWORD_SALT || ''))
+      .digest('hex');
+
+    // Update user password - do this before marking token as used
+    await this.prisma.user.update({
+      where: { 
+        email: email 
+      },
+      data: { 
+        passwordHash: hashedPassword
+      }
+    });
+
+    // FIXED: Mark token as used AFTER successful password update
+    await this.prisma.passwordReset.update({
+      where: { id: tokenData.id },
+      data: { used: true }
+    });
+
+    return { 
+      success: true, 
+      message: 'Password has been successfully reset' 
+    };
+  } catch (error) {
+    console.error('Password reset failed:', error);
+    return { 
+      success: false, 
+      message: 'An error occurred while resetting your password' 
+    };
   }
+}
 
   private validatePasswordStrength(password: string): { valid: boolean; message: string } {
     if (password.length < 8) {
