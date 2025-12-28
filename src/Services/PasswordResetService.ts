@@ -100,8 +100,7 @@ export class PasswordResetService {
         // Remove token if email failed
         await this.prisma.passwordReset.deleteMany({
           where: {
-            userEmail: email,
-            token: hashedToken
+            userEmail: email
           }
         });
 
