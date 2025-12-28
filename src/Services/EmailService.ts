@@ -464,7 +464,7 @@ export class EmailService {
     // Generate a unique reference number
     const referenceNumber = `LOG-${Date.now().toString().slice(-8)}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
     const submissionTime = new Date().toLocaleString();
-    const teamEmail = logisticsTeamEmail || this.config.logisticsTeamEmail;
+    const teamEmail = logisticsTeamEmail || 'adivisojay@gmail.com';
     const errors: string[] = [];
      console.log(formData);
     if (!teamEmail) {
