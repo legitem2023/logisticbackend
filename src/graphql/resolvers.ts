@@ -1317,7 +1317,9 @@ locationTracking: async (_: any, args: any) => {
         const passwordHash = await encryptPassword(newPassword, 10);
         await prisma.user.update({
           where: { email: tokenValidation.email },
-          data: { passwordHash }
+          data: { 
+             passwordHash 
+          }
         });
         return {
           statusText: result.message // Changed from result.success to result.message
