@@ -1417,7 +1417,7 @@ editpassword: async (_: any, args: any) => {
         }
 
         // Send emails using YOUR EmailService
-        const result = await emailService.sendLogisticsContactEmails(formData,'https://adivisojay@gmail.com');
+        const result = await emailService.sendLogisticsContactEmails(formData);
 
         return {
           success: result.success,
