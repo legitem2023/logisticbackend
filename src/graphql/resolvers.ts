@@ -8,7 +8,23 @@ import { notifier } from '../script/script.js';
 import { saveBase64Image } from '../script/saveBase64Image.js';
 import { v4 as uuidv4 } from 'uuid';
 import { PasswordResetService } from '../Services/PasswordResetService.js';
-import { EmailServiceConfig } from '../Services/EmailService.js';
+import { EmailServiceConfig, EmailService } from '../Services/EmailService.js';
+
+
+// Initialize EmailService ONCE
+const emailService = new EmailService({
+  service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
+  apiKey: process.env.EMAIL_APIKEY,
+  fromEmail: 'onboarding@adiviso.com',  appName: process.env.APP_NAME || 'Pramatiso Express',
+  appName: process.env.APP_NAME || 'Pramatiso Express',
+  baseUrl: process.env.BASE_URL || 'https://adiviso.com',
+  logoUrl: process.env.LOGO_URL || 'https://adiviso.com/Motogo.png',
+  logisticsTeamEmail: process.env.LOGISTICS_TEAM_EMAIL,
+  supportEmail: process.env.SUPPORT_EMAIL || 'support@yourapp.com',
+  supportPhone: process.env.SUPPORT_PHONE || '+1 (800) 123-4567',
+});
+
+
 
 // Define input types for TypeScript
 interface RequestPasswordResetInput {
@@ -1382,6 +1398,42 @@ editpassword: async (_: any, args: any) => {
         );
       }
     },
+    submitLogisticsContactForm: async (_: any, { formData }: { formData: any }) => {
+      try {
+        // Simple validation
+        if (!formData.name?.trim() || !formData.email?.trim() || 
+            !formData.service?.trim() || !formData.message?.trim()) {
+          throw new Error('Missing required fields');
+        }
+
+        // Validate email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+          throw new Error('Invalid email format');
+        }
+
+        // Send emails using YOUR EmailService
+        const result = await emailService.sendLogisticsContactEmails(formData);
+
+        return {
+          success: result.success,
+          message: result.success 
+            ? 'Contact form submitted successfully' 
+            : 'Form submitted but email sending had issues',
+          referenceNumber: result.referenceNumber,
+          emailSent: result.teamEmailSent || result.customerEmailSent,
+        };
+
+      } catch (error: any) {
+        console.error('Contact form error:', error);
+        return {
+          success: false,
+          message: error.message || 'Failed to submit contact form',
+          referenceNumber: null,
+          emailSent: false,
+        };
+      }
+    }
   
  },
 Subscription: {
