@@ -466,7 +466,7 @@ export class EmailService {
     const submissionTime = new Date().toLocaleString();
     const teamEmail = logisticsTeamEmail || this.config.logisticsTeamEmail;
     const errors: string[] = [];
-
+     console.log(formData);
     if (!teamEmail) {
       throw new Error('Logistics team email is required. Set it in config or pass as parameter.');
     }
