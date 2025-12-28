@@ -144,7 +144,7 @@ export class PasswordResetService {
       };
     }
     
-    if (tokenData.used) {
+    if (tokenData.used === true) {
       return { 
         valid: false, 
         message: 'This reset token has already been used.',
