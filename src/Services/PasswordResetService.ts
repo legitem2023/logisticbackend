@@ -243,11 +243,11 @@ export class PasswordResetService {
     });
 
     // FIXED: Mark token as used AFTER successful password update
-    await this.prisma.passwordReset.update({
+/*    await this.prisma.passwordReset.update({
       where: { id: tokenData.id },
       data: { used: true }
     });
-
+*/
     return { 
       success: true, 
       message: 'Password has been successfully reset' 
