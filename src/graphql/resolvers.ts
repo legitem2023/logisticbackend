@@ -530,7 +530,8 @@ login: async (_: any, args: any) => {
       email: user.email,
       name: user.name,
       role:user.role,
-      image:user.image
+      image:user.image,
+      percentShare:user.percentShare
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()
@@ -579,7 +580,8 @@ loginWithGoogle: async (_: any, args: any) => {
       email: user.email,
       name: user.name,
       role:user.role,
-      image:user.image
+      image:user.image,
+      percentShare:user.percentShare
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()
@@ -631,7 +633,8 @@ if (!user) {
       email: user.email,
       name: user.name,
       role:user.role,
-      image:user.image
+      image:user.image,
+      percentShare:user.percentShare
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()
