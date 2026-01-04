@@ -27,6 +27,7 @@ type User {
   name: String
   email: String
   phoneNumber: String
+  percentShare: Float
   address: String
   vehicleTypeId: String
   vehicleType: VehicleType
